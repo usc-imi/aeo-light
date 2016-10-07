@@ -1,0 +1,162 @@
+----------------------------------------------------------------------
+Copyright and Open Source Software License
+----------------------------------------------------------------------
+
+Copyright (c) 2015,2016, South Carolina Research Foundation
+All Rights Reserved
+
+AEO-Light, Ver. 2.0 (Beta)
+Greg Wilsbacher, Pencho Petrushev, L. Scott Johnson, Tommy Aschenbach,
+and the South Carolina Research Foundation
+
+Open Source Software License
+
+This Open Source Software License ("License") applies to the original
+work of authorship, herein known as AEO-Light ("Original Work") whose
+owner, South Carolina Research Foundation, ("Licensor") has placed the
+following licensing terms and conditions adjacent to the copyright
+notice for the Original Work:
+
+(1) Source Code. The term "Source Code" means the preferred form of
+the Original Work for making modifications to it and all available
+documentation describing how to modify the Original Work. Licensor
+agrees to provide a machine-readable copy of the Source Code of the
+Original Work along with each copy of the Original Work that Licensor
+distributes. Licensor reserves the right to satisfy this obligation by
+placing a machine-readable copy of the Source Code in an information
+repository reasonably calculated to permit inexpensive and convenient
+access by Licensee for as long as Licensor continues to distribute the
+Original Work.
+
+(2) Aggregate. A compilation of the Original Work with other separate
+and independent works, which are not by their nature extensions of the
+Original Work, and which are not combined with it such as to form a
+larger program, in or on a volume of a storage or distribution medium,
+shall be called an "Aggregate" if the compilation and its resulting
+copyright are not used to limit the access or legal rights of the
+compilation's users beyond what the individual works permit. Inclusion
+of the Original Work in an Aggregate, and not as a Derivative Work,
+does not cause this License to apply to the other parts of the
+Aggregate.
+
+(3) License. Licensor grants Licensee a worldwide, royalty-free,
+non-exclusive license, for the duration of the copyright, to do the
+following:
+
+a) to reproduce the Original Work in copies, either alone or as part
+of a collective work;
+b) to translate, adapt, alter, transform, modify, or arrange the
+Original Work, thereby creating derivative works ("Derivative Works")
+based upon the Original Work;
+c) to distribute or communicate copies of the Original Work and
+Derivative Works to the public, with the condition that copies of
+Original Work or Derivative Works that Licensee distribute or
+communicate shall be licensed under this Open Source Software License;
+d) to perform the Original Work publicly; and
+e) to display the Original Work publicly.
+
+Licensor grants to the United States Government, and others acting on
+its behalf, a paid-up, nonexclusive, irrevocable worldwide license to
+reproduce, to distribute copies to the public, to prepare derivative
+works, to perform publicly and to display publicly, and to permit
+others to do so.
+
+(4) Redistribution. Redistributions of source code must retain the
+above copyright notice, the terms of this License, and the Warranty
+Disclaimer as set out in Section 7 hereof. Any Derivative Works should
+be noted with comments and the author and organization's name.
+Redistributions in binary form must reproduce the above copyright
+notice, the terms of this License, and the Warranty Disclaimer as set
+out in Section 7 hereof in the documentation and/or other materials
+provided with the distribution. The software and any end-user
+documentation included with a redistribution, if any, must include the
+following acknowledgment:
+
+This product includes software produced by South Carolina Research
+Foundation under contract PR-50122 with the National Endowment of the
+Humanities.
+
+(5) Restrictions. Neither the names of Licensor, nor the names of any
+contributors to the Original Work, nor any of their trademarks or
+service marks, may be used to endorse or promote products derived from
+this Original Work without express prior permission of the Licensor.
+Except as expressly stated herein, nothing in this License grants any
+license to Licensor's trademarks, copyrights, patents, trade secrets
+or any other intellectual property. No license is granted to the
+trademarks of Licensor even if such marks are included in the Original
+Work. Nothing in this License shall be interpreted to prohibit
+Licensor from licensing under terms different from this License any
+Original Work that Licensor otherwise would have a right to license.
+
+(6) External Deployment. The term "External Deployment" means the use,
+distribution, or communication of the Original Work or Derivative
+Works in any way such that the Original Work or Derivative Works may
+be used by anyone other than Licensee, whether those works are
+distributed or communicated to those persons or made available as an
+application intended for use over a network. As an express condition
+for the grants of license hereunder, Licensee must treat any External
+Deployment by Licensee of the Original Work or a Derivative Work as a
+distribution under Section 3(c) hereof.
+
+(7) Attribution Rights. Licensee must retain, in the Source Code of
+any Derivative Work that Licensee creates, all copyright notices from
+the Source Code of the Original Work, as well as any notices of
+licensing and any descriptive text identified therein as an
+"Attribution Notice." Licensee must cause the Source Code for any
+Derivative Works that Licensee creates to carry a prominent
+Attribution Notice reasonably calculated to inform recipients that
+Licensee has modified the Original Work.
+
+(8) DISCLAIMER OF WARRANTY. THE ORIGINAL WORK IS PROVIDED UNDER THIS
+LICENSE ON AN "AS IS" BASIS AND NEITHER THE UNITED STATES GOVERNMENT
+NOR THE SOUTH CAROLINA RESEARCH FOUNDATION NOR ANY OF THEIR EMPLOYEES
+MAKE ANY WARRANTY, EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT
+LIMITATION, THE WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY OR
+FITNESS FOR A PARTICULAR PURPOSE, OR ASSUME ANY LEGAL LIABILITY OR
+RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY
+INFORMATION, DATA, APPARATUS, PRODUCT, OR PROCESS DISCLOSED. THE
+ENTIRE RISK AS TO THE QUALITY OF THE ORIGINAL WORK IS WITH YOU. THIS
+DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
+NO LICENSE TO THE ORIGINAL WORK IS GRANTED BY THIS LICENSE EXCEPT
+UNDER THIS DISCLAIMER.
+
+(9) LIMITATION OF LIABILITY. UNDER NO CIRCUMSTANCES AND UNDER NO LEGAL
+THEORY, WHETHER IN TORT (INCLUDING STRICT LIABILITY OR NEGLIGENCE),
+CONTRACT, OR OTHERWISE, SHALL THE LICENSOR BE LIABLE TO ANYONE FOR ANY
+INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES OF ANY
+CHARACTER ARISING AS A RESULT OF THIS LICENSE OR THE USE OF THE
+ORIGINAL WORK INCLUDING, WITHOUT LIMITATION, DAMAGES FOR LOSS OF
+GOODWILL, WORK STOPPAGE, COMPUTER FAILURE OR MALFUNCTION, OR ANY AND
+ALL OTHER COMMERCIAL DAMAGES OR LOSSES. THIS LIMITATION OF LIABILITY
+SHALL NOT APPLY TO THE EXTENT APPLICABLE LAW PROHIBITS SUCH LIMITATION.
+
+(10) Acceptance and Termination. If, at any time, Licensee expressly
+assented to this License, that assent indicates Licensee's clear and
+irrevocable acceptance of this License and all of its terms and
+conditions. If Licensee distributes or communicates copies of the
+Original Work or a Derivative Work, Licensee must make a reasonable
+effort under the circumstances to obtain the express assent of
+recipients to the terms of this License. This License conditions
+Licensee's rights to undertake the activities listed in Section 2,
+including the right to create Derivative Works based upon the Original
+Work while complying with this License. Nothing in this License is
+intended to affect copyright exceptions and limitations (including
+"fair use" or "fair dealing"). This License shall terminate
+immediately and Licensee may no longer exercise any of the rights
+granted to Licensee by this License upon its failure to honor the
+conditions in Section 3(c).
+
+(11) Jurisdiction, Venue and Governing Law. Any action or suit
+relating to this License may be brought only in the courts of
+Columbia, Richland County, South Carolina; this Agreement will be
+interpreted in accordance with the laws of the U.S. Government and to
+the extent there is no U.S. Government law, the laws of the State of
+South Carolina. Any use of the Original Work outside the scope of this
+License or after its termination shall be subject to the requirements
+and penalties of copyright law. This section shall survive the
+termination of this License.
+
+(12) Miscellaneous. If any provision of this License is held to be
+unenforceable, such provision shall be reformed only to the extent
+necessary to make it enforceable.
+
