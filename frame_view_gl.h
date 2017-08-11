@@ -37,6 +37,8 @@
 #include <QSurfaceFormat>
 #include <QContextMenuEvent>
 
+#include "videoencoder.h"
+
 typedef void (*FrameWindowCallbackFunction)(void *);
 
 class Frame_Window : public OpenGLWindow
@@ -56,8 +58,19 @@ public:
 		float value;
 	} overlap_match;
 
+    typedef struct  {
+        GLuint video_output_fbo;
+        GLuint video_output_texture;
+        int width;
+        int height;
+        uint8_t * videobuffer;
+    } video_output;
+
 	void ParamUpdateCallback(FrameWindowCallbackFunction cb, void *userData);
-    void load_frame_texture(void*, int , int , int , int , int) ; //load frame from ponter
+
+	//load frame from pointer
+	void load_frame_texture(FrameTexture *frame);
+
 	float GetAverage(GLfloat *, int ) ;
 	int GetMinLoc(GLfloat*, int ) ;
 	void GetBestMatchFromFloatArray(GLfloat*, int , int ,overlap_match &) ;
@@ -66,11 +79,14 @@ public:
 	void ProcessRecording(int numsamples);
 	void DestroyRecording( );
 	float **GetRecording() const { return FileRealBuffer; }
-
+    void PrepareVideoOutput(FrameTexture *frame)	;
 	float GetMax(GLfloat* dArray, int iSize) ;
-
+	void read_frame_texture(FrameTexture *frame);
+	float *GetCalibrationMask();
+	void SetCalibrationMask(const float *mask);
 	void update_parameters();// update gpu variables and rerender
 
+    video_output vo;
 	// working data
 	float * *FileRealBuffer;
 
@@ -120,6 +136,7 @@ public:
 	bool overlapshow;
 	bool is_rendering;
 	bool is_debug;
+    bool is_videooutput;
 	int overrideOverlap;
 
 	float fps;
@@ -181,6 +198,7 @@ private:
 	GLuint output_audio_texture;
 	GLuint audio_float_texture; //render texture audio floating point
 	GLuint audio_int_texture; //render texture audio integer tbd-16bit or 32bit?
+
 
 	GLuint cal_audio_texture;
 

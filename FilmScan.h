@@ -50,6 +50,7 @@ extern "C"
 
 #include <vector>
 #include "wav.h"
+#include "videoencoder.h"
 
 #include <QOpenGLTexture>
 
@@ -106,26 +107,25 @@ public:
 	~Video();
 
 public:
-	bool ReadNextFrame(void);
+	bool ReadNextFrame(size_t currFrameNum);
 	bool ReadFrame(size_t frameNum);
 
 	double *GetFrame(size_t frameNum, double *buf);
 
 	unsigned char *GetFrameImage(size_t frameNum, unsigned char *buf,
 			int &width,int &height,bool &endian);
-
 };
 #endif
 
-typedef enum _SourceFormat {
-	SOURCE_DPX,
-	SOURCE_EXR,
-	SOURCE_TIFF,
-	SOURCE_OTHER_IMG,
-	SOURCE_LIBAV,
-	SOURCE_WAV,
-	SOURCE_UNKNOWN
-} SourceFormat;
+
+typedef int SourceFormat;
+#define SOURCE_DPX 0
+#define SOURCE_EXR 1
+#define SOURCE_TIFF 2
+#define SOURCE_OTHER_IMG 3
+#define SOURCE_LIBAV 4
+#define SOURCE_WAV 5
+#define SOURCE_UNKNOWN 6
 
 class FilmScan {
 private:
@@ -177,12 +177,14 @@ public:
 	unsigned int Width() const { return width; };
 	unsigned int Height() const { return height; };
 	std::string GetFileName() const { return inputName; }
+	SourceFormat GetFormat() const { return srcFormat; }
+	const char *GetFormatStr() const;
+	static SourceFormat StrToSourceFormat(const char *str);
 	const char *GetPath() const { return path; }
 	const char *GetBaseName() const { return name; }
 
 	double *GetFrame(long frameNum, double *buf) const;
-    unsigned char *GetFrameImage(long frameNum, unsigned char *buf,
-            int &width, int &height, GLenum &pix_fmt, int &num_components, bool &endian) const;
+	FrameTexture *GetFrameImage(long frameNum, FrameTexture *frame) const;
 	FilmFrame GetFrame(long frameNum) const;
 	FilmStrip GetFrameRange(long frameRange[2]) const;
 

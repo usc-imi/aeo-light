@@ -28,7 +28,20 @@
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
+
+	a.setOrganizationName("Interdisciplinary Mathematics Institute");
+	a.setOrganizationDomain("imi.cas.sc.edu");
+	a.setApplicationName("AEO-Light");
+	a.setApplicationVersion(APP_VERSION_STR);
+
 	MainWindow w;
+
+	for(int i=0; i<argc; i++) std::cerr << i << ": " << argv[i] << "\n";
+	if(argc > 1) w.SetStartingProject(argv[1]);
+
 	w.show();
 	return a.exec();
+
+	// If you have any clean-up code to execute, don't put it here.
+	// Connect it to the aboutToQuit() signal or use qAddPostRoutine().
 }

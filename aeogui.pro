@@ -37,7 +37,6 @@
 # dspfilters
 # openexr
 
-
 QT       += core gui multimedia
 
 win32: QT += opengl
@@ -46,6 +45,17 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = AEO-Light
 TEMPLATE = app
+
+# The version of AEO-Light
+APP_NAME = AEO-Light
+VERSION = 2.3
+
+# nb: when updating the version number, be sure to update LICENSE.txt too
+
+# Make the version number visible in the source code
+DEFINES += APP_VERSION=\\\"$$VERSION\\\"
+DEFINES += APP_VERSION_STR=\\\"$$VERSION\\\"
+
 
 ICON = $$PWD/aeolight.icns
 
@@ -90,10 +100,13 @@ SOURCES += \
     wav.cpp \
     openglwindow.cpp \
     frame_view_gl.cpp \
-    #readframeexr.cpp
     writexml.cpp \
     readframetiff.cpp \
-    savesampledialog.cpp
+    savesampledialog.cpp \
+    preferencesdialog.cpp \
+    extractdialog.cpp \
+    metadata.cpp \
+    videoencoder.cpp
 
 HEADERS  += mainwindow.h \
     FilmScan.h \
@@ -107,20 +120,28 @@ HEADERS  += mainwindow.h \
     openglwindow.h \
     frame_view_gl.h \
     aeoexception.h \
-    #readframeexr.h
     writexml.h \
     readframetiff.h \
-    savesampledialog.h
+    savesampledialog.h \
+    preferencesdialog.h \
+    extractdialog.h \
+    metadata.h \
+    videoencoder.h
 
 FORMS    += mainwindow.ui \
-    savesampledialog.ui
+    savesampledialog.ui \
+    preferencesdialog.ui \
+    extractdialog.ui
 
 # locate the dpx library
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/release/
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/debug/
 else:unix: LIBS += -L$$PWD/
 
-LIBS += -ldpx -ltiff
+LIBS += -ldpx
+
+win32: LIBS += -llibtiff
+else: LIBS += -ltiff
 
 win32-g++:CONFIG(release, debug|release) {
 	PRE_TARGETDEPS += $$PWD/./release/libdpx.a
@@ -138,20 +159,19 @@ unix: CONFIG += link_pkgconfig
 
 # libav libraries
 LIBS += -lavcodec -lavfilter -lavformat -lavutil
-LIBS += -lswscale -lswresample -liconv
+LIBS += -lswscale -lswresample
 
 # OpenEXR libraries
-LIBS += -lImath -lHalf -lIex -lIexMath -lIlmThread -lIlmImf
+# LIBS += -lImath -lHalf -lIex -lIexMath -lIlmThread -lIlmImf
 
 # other libraries
 LIBS += -ldspfilters
 
 ## Turn off unecessary warnings
-unix: QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-private-field
-
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-variable -Wno-unused-parameter \
+unix: QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-private-field \
+    -Wno-unused-variable -Wno-unused-parameter \
     -Wno-ignored-qualifiers -Wno-unused-function -Wno-sign-compare \
-    -Wno-unused-local-typedef
+    -Wno-unused-local-typedef -Wno-reserved-user-defined-literal
 
 RESOURCES += \
     shaders.qrc \

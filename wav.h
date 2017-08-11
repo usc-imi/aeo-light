@@ -77,6 +77,8 @@ public:
 
 
 	FILE * audio_file;
+	long infochunkPosition;
+
 	//std::string * audiofilename;
 	//std::string  * temp_audiofilename;
 	int numframes;
@@ -106,6 +108,9 @@ public:
 	void writeframe(float* audio_frame,bool dcbias);
 	void writebuffer(float **audio_buffer, int samples);
 	void close();
+	void BeginInfoChunk();
+	void AddInfo(const char *id, const char *data);
+	void EndInfoChunk();
 	void set_timecode(unsigned int seconds, unsigned int frames);
 	bool read(const char *fn);
 	int GetHeight(void) const;

@@ -130,7 +130,7 @@ void wav::writebuffer(float ** audioframe,int samples)
 		else
 			xr = xl;
 
-		// rescale to Signed int
+		// rescale to unsigned int
 		vall=int32_t(xl*(UMAX(bitsPerSample)));
 		valr=int32_t(xr*(UMAX(bitsPerSample)));
 
@@ -279,6 +279,31 @@ void wav::write(const char *fn, const std::vector<double> &signal)
 	fclose(fp);
 }
 
+void wav::BeginInfoChunk()
+{
+	infochunkPosition = ftell(audio_file);
+	fwrite("LIST",1,4,audio_file);
+	fwrite("\0\0\0\0",1,4,audio_file);
+	fwrite("INFO",1,4,audio_file);
+}
+
+void wav::AddInfo(const char *id, const char *data)
+{
+	uint32_t dataSize = strlen(data)+1; // include null
+	fwrite(id,1,4,audio_file);
+	fwrite(&dataSize,4,1,audio_file);
+	fwrite(data,1,dataSize,audio_file);
+	if(dataSize%2) fputc(0, audio_file); // pad to even
+}
+
+void wav::EndInfoChunk()
+{
+	long endPos = ftell(audio_file);
+	uint32_t infoSize = (endPos - infochunkPosition) - 8;
+	fseek(audio_file, infochunkPosition+4, SEEK_SET);
+	fwrite(&infoSize,4,1,audio_file);
+	fseek(audio_file, 0, SEEK_END);
+}
 
 // VERY dumb WAV reader: assumes signed 16 bit samples (WAV standard)
 // returns unsigned 16 bit samples

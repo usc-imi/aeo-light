@@ -51,7 +51,41 @@
 #include <QString>
 #include <QMessageBox>
 
+#ifdef _WIN32
+// Depending on the way you've built libtiff on Windows, you may have
+// to adjust the way tiffio.h declares the libtiff functions.
+// If you're getting errors about symbols starting with __imp_TIFF, like
+//
+// FilmScan.obj : error LNK2019: unresolved external symbol __imp_TIFFClose
+//
+// then define BUILD_LIBTIFF_DLL (which will make the linker look for
+// the __exp_TIFFClose version instead)
+//
+// If you're getting other link errors about unresolved symbols related to
+// libtiff, try defining one of these other constants:
+// USE_LIBTIFF_DLL (look for __imp_TIFF)
+// USE_LIBTIFF_STATIC (look for _TIFF)
+//
+  #define BUILD_LIBTIFF_DLL
+#endif
+
 #include <tiffio.h>
+
+#if (defined __WIN32__) || (defined _WIN32)
+# ifdef BUILD_LIBTIFF_DLL
+#  define LIBTIFF_DLL_IMPEXP     __DLL_EXPORT__
+# elif defined(LIBTIFF_STATIC)
+#  define LIBTIFF_DLL_IMPEXP
+# elif defined (USE_LIBTIFF_DLL)
+#  define LIBTIFF_DLL_IMPEXP     __DLL_IMPORT__
+# elif defined (USE_LIBTIFF_STATIC)
+#  define LIBTIFF_DLL_IMPEXP
+# else /* assume USE_LIBTIFF_DLL */
+#  define LIBTIFF_DLL_IMPEXP     __DLL_IMPORT__
+# endif
+#else /* __WIN32__ */
+# define LIBTIFF_DLL_IMPEXP
+#endif
 
 #include "DPX.h"
 #include "readframedpx.h"
@@ -88,7 +122,7 @@ Video::~Video()
 }
 
 //----------------------------------------------------------------------------
-bool Video::ReadNextFrame(void)
+bool Video::ReadNextFrame(size_t currfnum)
 {
 	AVPacket packet;
 	int done;
@@ -109,7 +143,8 @@ bool Video::ReadNextFrame(void)
 			if(done)
 			{
 				this->dts = packet.dts;
-				this->curFrame = (this->dts - this->dtsBase)/this->dtsStep + 1;
+				this->curFrame = currfnum;
+				// this->curFrame = (this->dts - this->dtsBase)/this->dtsStep + 1;
 
 				av_packet_unref(&packet);
 				return true;
@@ -126,15 +161,15 @@ bool Video::ReadNextFrame(void)
 bool Video::ReadFrame(size_t frameNum = 0)
 {
 
-    //if(frameNum == 0) return ReadNextFrame();
+	//if(frameNum == 0) return ReadNextFrame();
 
 	// asking for the current frame again?
 	if(this->curFrame == frameNum) return true;
 
 	// asking for the next frame explicitly?
-	if(this->curFrame+1 == frameNum) return ReadNextFrame();
+	if(this->curFrame+1 == frameNum) return ReadNextFrame(frameNum);
 
-    size_t target = this->dtsBase + (frameNum)*this->dtsStep;
+	size_t target = this->dtsBase + (frameNum)*this->dtsStep;
 
 	int seekflags = AVSEEK_FLAG_ANY;
 
@@ -142,10 +177,11 @@ bool Video::ReadFrame(size_t frameNum = 0)
 
 	av_seek_frame(this->format, this->streamIdx, target, seekflags);
 
-	do
-	{
-		if(!ReadNextFrame()) return false;
-	} while(this->dts < target);
+	// do
+	// {
+	//    if(!ReadNextFrame()) return false;
+	// } while(this->dts < target);
+	if(!ReadNextFrame(frameNum)) return false;
 
 	return true;
 }
@@ -239,6 +275,32 @@ FilmFrame::FilmFrame(unsigned int r, unsigned int c)
 //-----------------------------------------------------------------------------
 FilmFrame::~FilmFrame()
 {
+}
+
+//-----------------------------------------------------------------------------
+
+const char *SourceFormatName[] {
+	"DPX",
+	"OpenEXR",
+	"TIFF",
+	"Other image",
+	"LibAV Video",
+	"WAV",
+	"Unknown" };
+
+const char *FilmScan::GetFormatStr() const
+{
+	return SourceFormatName[this->srcFormat];
+}
+
+SourceFormat FilmScan::StrToSourceFormat(const char *str)
+{
+	SourceFormat i;
+	for(i=0; i<SOURCE_UNKNOWN; ++i)
+	{
+		if(strcmp(SourceFormatName[i], str) == 0) break;
+	}
+	return i;
 }
 
 //-----------------------------------------------------------------------------
@@ -439,7 +501,7 @@ bool FilmScan::SourceTIFF(const std::string filename)
 	this->height = h;
 	this->srcFormat = SOURCE_TIFF;
 
-    this->TimeCode = "00:00:00:00";
+	this->TimeCode = "00:00:00:00";
 	SourceIdentifyImageSet(filename);
 
 	return true;
@@ -645,7 +707,7 @@ bool FilmScan::SourceWav(const std::string filename)
 	strcpy(this->name, cp);
 	this->path = new char[cp - filename.c_str() + 1];
 	strncpy(this->path, filename.c_str(), cp-filename.c_str());
-    this->TimeCode = "00:00:00:00";
+	this->TimeCode = "00:00:00:00";
 	this->srcFormat = SOURCE_WAV;
 
 	return true;
@@ -687,8 +749,8 @@ bool FilmScan::SourceLibAV(const std::string filename)
 
 	// Dump information about file onto standard error
 	//av_dump_format(vid->format, 0, filename.c_str(), 0);
-char TC [20];
-AVDictionaryEntry * DE=NULL;
+	char TC [20];
+	AVDictionaryEntry * DE=NULL;
 	// Find the first video stream
 	vid->streamIdx = -1;
 	for(int i=0; i<vid->format->nb_streams; ++i)
@@ -696,15 +758,12 @@ AVDictionaryEntry * DE=NULL;
 		if(vid->format->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO)
 		{
 			vid->streamIdx=i;
-         DE= av_dict_get(vid->format->streams[i]->metadata,"timecode",NULL ,0);
-           if(DE)
-           {
+			DE = av_dict_get(vid->format->streams[i]->metadata,"timecode",NULL ,0);
 
-               this->TimeCode=DE->value;
-
-           }
-           else
-               this->TimeCode= "00:00:00:00" ;
+			if(DE)
+				this->TimeCode = DE->value;
+			else
+				this->TimeCode = "00:00:00:00" ;
 
 			break;
 		}
@@ -793,7 +852,7 @@ AVDictionaryEntry * DE=NULL;
 		}
 	}
 
-    this->firstFrame = 0;
+	this->firstFrame = 0;
 
 	AVCodecContext *codecOrig;
 	AVCodec *decoder;
@@ -921,13 +980,13 @@ AVDictionaryEntry * DE=NULL;
 
 
 	// Read two frames to calibrate seek-to-frame parameters
-	vid->ReadNextFrame();
+	vid->ReadNextFrame(0);
 	vid->dtsBase = vid->dts;
-	vid->ReadNextFrame();
+	vid->ReadNextFrame(1);
 	vid->dtsStep = vid->dts;
 
 	// reset to first frame
-    vid->ReadFrame(0);
+	vid->ReadFrame(0);
 
 	int len = filename.length();
 	const char *cp = filename.c_str() + len;
@@ -1018,53 +1077,53 @@ double* FilmScan::GetFrame(long frameNum, double *buf) const
 
 //-----------------------------------------------------------------------------
 
-unsigned char* FilmScan::GetFrameImage(long frameNum, unsigned char *buf,
-		int &width,int &height, GLenum &pix_fmt,
-        int &num_components, bool &endian) const
+FrameTexture* FilmScan::GetFrameImage(long frameNum, FrameTexture *frame) const
 {
 	if(frameNum < this->FirstFrame() || frameNum > this->LastFrame())
 	{
 		throw AeoException(QString("Frame out of range: %1").arg(frameNum));
 	}
 
+	if(!frame) frame = new FrameTexture;
+
 	switch(this->srcFormat)
 	{
 	case SOURCE_DPX:
 		sprintf(this->fnbuf+strlen(this->path)+1, this->name, frameNum);
-		buf = ReadFrameDPX_ImageData(fnbuf, buf, width, height, endian,
-                pix_fmt, num_components);
-		//pix_fmt = GL_UNSIGNED_INT_10_10_10_2;
+		frame->buf = ReadFrameDPX_ImageData(fnbuf, frame->buf, frame->bufSize,
+				frame->width, frame->height, frame->isNonNativeEndianess,
+				frame->format, frame->nComponents);
 		break;
 	case SOURCE_TIFF:
 		sprintf(this->fnbuf+strlen(this->path)+1, this->name, frameNum);
-		buf = ReadFrameTIFF_ImageData(fnbuf, buf, width, height, endian,
-				pix_fmt, num_components);
-
+		frame->buf = ReadFrameTIFF_ImageData(fnbuf, frame->buf,
+				frame->width, frame->height, frame->isNonNativeEndianess,
+				frame->format, frame->nComponents);
 		break;
 	case SOURCE_LIBAV:
 		if(this->vid)
 		{
-			buf = this->vid->GetFrameImage(frameNum, buf,
-					width, height, endian);
-			num_components = 4;
-			pix_fmt = GL_UNSIGNED_SHORT;
+			frame->buf = this->vid->GetFrameImage(frameNum, frame->buf,
+					frame->width, frame->height, frame->isNonNativeEndianess);
+			frame->nComponents = 4;
+			frame->format = GL_UNSIGNED_SHORT;
 		}
 		else throw AeoException("Internal video structure not ready");
 		break;
 	case SOURCE_WAV:
 		if(this->synth)
 		{
-			buf = this->synth->GetFrameImage(frameNum, buf,
-					width, height, endian);
-			num_components = 4;
-			pix_fmt = GL_UNSIGNED_SHORT;
+			frame->buf = this->synth->GetFrameImage(frameNum, frame->buf,
+					frame->width, frame->height, frame->isNonNativeEndianess);
+			frame->nComponents = 4;
+			frame->format = GL_UNSIGNED_SHORT;
 		}
 		else throw AeoException("Internal wav synth structure not ready");
 	default:
 		throw AeoException("Internal scan format not set correctly");
 	}
 
-	return buf;
+	return frame;
 }
 
 //-----------------------------------------------------------------------------

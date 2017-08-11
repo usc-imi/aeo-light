@@ -28,5 +28,7 @@
 
 double *ReadFrameDPX(const char *dpxfn, double *buf);
 //boost::numeric::ublas::matrix<double> ReadFrameDPX(const char *dpxfn);
-unsigned char *ReadFrameDPX_ImageData(const char *dpxfn, unsigned char *buf, int &width, int &height, bool &endian, GLenum &pix_fmt, int &num_components);
+unsigned char *ReadFrameDPX_ImageData(const char *dpxfn, unsigned char *buf,
+		int &bufSize, int &width, int &height, bool &endian,
+		GLenum &pix_fmt, int &num_components);
 #endif

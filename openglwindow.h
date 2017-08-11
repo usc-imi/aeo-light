@@ -65,6 +65,8 @@ public:
 	void setAnimating(bool animating);
 
 	void PrintGLVersion(QTextStream &stream);
+	QString GLVersionString();
+	int MajorVersion() {return m_context->format().majorVersion();}
 
 public slots:
 	void renderLater();

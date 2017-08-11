@@ -2,10 +2,10 @@
 Copyright and Open Source Software License
 ----------------------------------------------------------------------
 
-Copyright (c) 2015,2016, South Carolina Research Foundation
+Copyright (c) 2015-2017 South Carolina Research Foundation
 All Rights Reserved
 
-AEO-Light, Ver. 2.0 (Beta)
+AEO-Light, Ver. 2.3
 Greg Wilsbacher, Pencho Petrushev, L. Scott Johnson, Tommy Aschenbach,
 and the South Carolina Research Foundation
 

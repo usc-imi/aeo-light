@@ -161,7 +161,8 @@ double *ReadFrameDPX(const char *dpxfn, double *buf=NULL)
 	return buf;
 }
 unsigned char* ReadFrameDPX_ImageData(const char *dpxfn, unsigned char *buf,
-        int &width,int &height,bool &endian, GLenum &pix_fmt,int &num_components)
+		int &bufSize, int &width,int &height,bool &endian,
+		GLenum &pix_fmt,int &num_components)
 {
 	InStream img;
 
@@ -195,45 +196,44 @@ unsigned char* ReadFrameDPX_ImageData(const char *dpxfn, unsigned char *buf,
 	int bitDepth = dpx.header.ComponentByteCount(0) * 8;
 
 	int numChannels = dpx.header.ImageElementComponentCount(0);
-    int pixel_size; //in bytes;
+	int pixel_size; //in bytes;
 
+	if(dpx.header.BitDepth(0) == 10)
+	{
+		pix_fmt = GL_UNSIGNED_INT_10_10_10_2;
+		bufSize = dpx.header.Width() * dpx.header.Height() * 4;
+		num_components=4;
+		pixel_size=4;
+	}
+	else if (dpx.header.BitDepth(0) == 16 && numChannels ==3)
+	{
+		// XXX: Why 8 instead of pixel_size of 6?
+		bufSize = dpx.header.Width() * dpx.header.Height() * 8;
+		pix_fmt = GL_UNSIGNED_SHORT;
+		num_components=3;
+		pixel_size = 6;
+	}
+	else //16bit luma
+	{
+		bufSize = dpx.header.Width() * dpx.header.Height() * 2;
+		pix_fmt = GL_UNSIGNED_SHORT;
+		num_components=1;
+		pixel_size = 2;
+	}
 
-        if(dpx.header.BitDepth(0) == 10)
-        {
-            pix_fmt = GL_UNSIGNED_INT_10_10_10_2;
-            buf = new unsigned char [dpx.header.Width() * dpx.header.Height() * 4];
-            num_components=4;
-            pixel_size=4;
-
-        }
-        else if (dpx.header.BitDepth(0) == 16 && numChannels ==3)
-        {
-            buf = new unsigned char [dpx.header.Width() * dpx.header.Height() * 8];
-            pix_fmt = GL_UNSIGNED_SHORT;
-            num_components=3;
-            pixel_size = 6;
-        }
-        else //16bit luma
-        {
-
-            buf = new unsigned char [dpx.header.Width() * dpx.header.Height() * 2];
-            pix_fmt = GL_UNSIGNED_SHORT;
-            num_components=1;
-            pixel_size = 2;
-
-        }
+	if(buf == NULL)
+	{
+		buf = new unsigned char [bufSize];
 		if(buf == NULL)
-		{
-			throw AeoException("Out of Memory: DPX buf");
-		}
-
+			throw AeoException("Out of Memory: DPX image buf");
+	}
 
 	dpx.fd->Seek( dpx.header.imageOffset,dpx.fd->kStart);
 	width=dpx.header.Width();
 	height= dpx.header.Height();
 
 	endian=dpx.header.RequiresByteSwap();
-    dpx.fd->Read(buf,dpx.header.Width() * dpx.header.Height() * pixel_size);
+	dpx.fd->Read(buf,dpx.header.Width() * dpx.header.Height() * pixel_size);
 	img.Close();
 	return buf;
 

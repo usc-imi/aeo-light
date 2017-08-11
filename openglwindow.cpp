@@ -133,6 +133,16 @@ void OpenGLWindow::setAnimating(bool animating)
 		renderLater();
 }
 
+QString OpenGLWindow::GLVersionString()
+{
+	if(this->m_context)
+		return QString("%1.%2").
+				arg(this->m_context->format().majorVersion()).
+				arg(this->m_context->format().minorVersion());
+	else
+		return "?";
+}
+
 void OpenGLWindow::PrintGLVersion(QTextStream &stream)
 {
 	stream << "OpenGL version "

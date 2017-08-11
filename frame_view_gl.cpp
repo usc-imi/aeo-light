@@ -320,6 +320,10 @@ Frame_Window::Frame_Window(int w,int h)
 	audio_float_texture = 0;
 	audio_int_texture = 0;
 	cal_audio_texture = 0;
+  vo.videobuffer=NULL;
+  is_videooutput=0;
+
+
 }
 
 Frame_Window::~Frame_Window()
@@ -677,27 +681,25 @@ void Frame_Window::gen_tex_bufs()
 	glDisable(GL_DEPTH_TEST);
 }
 
-void Frame_Window::load_frame_texture(void* frame_ptr,int width,int height,
-		int pix_format,int num_components, int endian)
+void Frame_Window::load_frame_texture(FrameTexture *frame)
 {
 	GLenum componentformat;
 	CHECK_GL_ERROR(__FILE__,__LINE__);
 	glActiveTexture(GL_TEXTURE0);
-	glPixelStorei(GL_UNPACK_SWAP_BYTES,endian) ;
+	glPixelStorei(GL_UNPACK_SWAP_BYTES, frame->isNonNativeEndianess) ;
 	glBindTexture(GL_TEXTURE_2D,frame_texture);
 	CHECK_GL_ERROR(__FILE__,__LINE__);
 
-	if(num_components == 4)
-		componentformat = GL_RGBA;
-	else if(num_components == 3)
-		componentformat = GL_RGB;
-	else if(num_components == 1)
-		componentformat = GL_LUMINANCE;
-	else
-		throw AeoException("Invalid num_components");
+	switch(frame->nComponents)
+	{
+	case 4: componentformat = GL_RGBA; break;
+	case 3:	componentformat = GL_RGB; break;
+	case 1:	componentformat = GL_LUMINANCE; break;
+	default: throw AeoException("Invalid num_components");
+	}
 
-	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB16,width,height,0,componentformat,
-			pix_format,frame_ptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, frame->width, frame->height, 0,
+			componentformat, frame->format, frame->buf);
 
 	CHECK_GL_ERROR(__FILE__,__LINE__);
 	new_frame=true;
@@ -1001,7 +1003,7 @@ void Frame_Window::render()
 	//**********************************Cal RENDER*****************************
 	// Input Textures: adj_frame_texture (adjusted image texture)
 	// Renders to: cal_audio_texture
-	// Description: avergaes lines with alpha 0.005 200 frames
+	// Description: averages lines with alpha 0.005 200 frames
 	if(is_caling)
 	{
 		CUR_OP("Cal Render");
@@ -1202,6 +1204,33 @@ void Frame_Window::render()
 	CUR_OP("calling update_parameters() in overlap computation");
 	update_parameters();
 
+    //**********************Video output render*******************************
+    // Input Textures: picture textures
+    // Renders to: vo fbo
+    // Description: draw for video ouput
+
+    if(is_videooutput)
+    {
+        CUR_OP("screen render (mode 2)");
+        m_program->setUniformValue(m_rendermode_loc, 0.0f);
+        CUR_OP("setting vertexAttribPointer for screen render (mode 2)");
+
+            glVertexAttribPointer(m_texAttr, 3, GL_FLOAT, GL_FALSE, 0,
+                    verticesTex);
+
+        CUR_OP("binding frambuffer for screen render (mode 2)");
+        glBindFramebuffer(GL_FRAMEBUFFER,vo.video_output_fbo);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+        CHECK_GL_ERROR(__FILE__,__LINE__);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glViewport(0,0,vo.width,vo.height);
+
+        CUR_OP("drawing elements for screen render (mode 2)");
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
+        CHECK_GL_ERROR(__FILE__,__LINE__);
+
+    }
 	//**********************Pix to screen render*******************************
 	// Input Textures: picture textures
 	// Renders to: screen back buffer
@@ -1341,6 +1370,16 @@ void Frame_Window::PrepareRecording(int numsamples)
 
 	FileRealBuffer[0] = new float[numsamples];
 	FileRealBuffer[1] = new float[numsamples];
+
+	if(logger)
+	{
+		(*logger) << "FileRealBuffer = [" << FileRealBuffer[0] <<
+				"," << FileRealBuffer[1] << "] (2x" << numsamples << "\n";
+	}
+	fprintf(stderr, "FileRealBuffer = [%p,%p]\n",
+			FileRealBuffer[0], FileRealBuffer[1]);
+	fflush(stderr);
+
 	samplepointer=0;
 }
 
@@ -1350,6 +1389,7 @@ void Frame_Window::DestroyRecording()
 	delete [] FileRealBuffer[0];
 
 	delete[] FileRealBuffer ;
+	FileRealBuffer = NULL;
 	samplepointer=0;
 }
 
@@ -1390,6 +1430,97 @@ void Frame_Window::ProcessRecording(int numsamples)
 
 
 }
+void Frame_Window::PrepareVideoOutput(FrameTexture * frame)
+{
+	if(vo.video_output_fbo!=0)
+	{
+		glDeleteFramebuffers(1,&vo.video_output_fbo);
+		glDeleteTextures(1,&vo.video_output_texture);
+	}
+	if(vo.videobuffer!=NULL)
+		delete[] vo.videobuffer;
+
+
+	vo.videobuffer=frame->buf;
+
+	vo.height=frame->height;
+	vo.width= frame->width;
+	glGenTextures(1,&vo.video_output_texture);
+	glActiveTexture(GL_TEXTURE9);
+	glBindTexture(GL_TEXTURE_2D, vo.video_output_texture);
+	CHECK_GL_ERROR(__FILE__,__LINE__);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	CHECK_GL_ERROR(__FILE__,__LINE__);
+
+	glGenFramebuffers(1,&vo.video_output_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER,vo.video_output_fbo);
+
+	glBindTexture(GL_TEXTURE_2D, vo.video_output_texture);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,frame->width,frame->height,0,
+			GL_RGBA,GL_UNSIGNED_BYTE,NULL);
+	glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,
+			vo.video_output_texture,0);
+
+	glActiveTexture(GL_TEXTURE0);
+}
+
+void Frame_Window::read_frame_texture(FrameTexture * frame)
+{
+	if(vo.videobuffer == NULL) return;
+
+	glBindBuffer(GL_PIXEL_PACK_BUFFER,0);
+
+	//  glPixelStorei(GL_UNPACK_SWAP_BYTES,0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER,vo.video_output_fbo);
+
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+	// Reference Point: LSJ-20170519-1322
+	// See mainwindow.cpp:LSJ-20170519-1322
+	glReadPixels(0, 0, frame->width, frame->height,GL_RGBA,
+			GL_UNSIGNED_INT_8_8_8_8_REV, vo.videobuffer); //copy buffer out to
+}
+
+float *Frame_Window::GetCalibrationMask()
+{
+	/*
+	float *buf = new float[cal_points];
+
+	glBindFramebuffer(GL_FRAMEBUFFER,audio_fbo);
+	glReadBuffer(GL_COLOR_ATTACHMENT4);
+	glReadPixels(0, 0, 1, cal_points,GL_RED, GL_FLOAT,buf);
+	*/
+
+	float *buf2 = new float[cal_points*2];
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, cal_audio_texture);
+	glGetTexImage(GL_TEXTURE_2D,0,GL_RED,GL_FLOAT,buf2);
+
+	return buf2;
+}
+
+void Frame_Window::SetCalibrationMask(const float *mask)
+{
+	CHECK_GL_ERROR(__FILE__,__LINE__);
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, cal_audio_texture);
+	CHECK_GL_ERROR(__FILE__,__LINE__);
+
+	glTexImage2D(GL_TEXTURE_2D,0,GL_R32F,2,cal_points,0,GL_LUMINANCE,
+			GL_FLOAT,mask);
+
+	CHECK_GL_ERROR(__FILE__,__LINE__);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT4,GL_TEXTURE_2D,
+			cal_audio_texture,0);
+	CHECK_GL_ERROR(__FILE__,__LINE__);
+}
+
 
 float Frame_Window::GetAverage(GLfloat* dArray, int iSize)
 {
