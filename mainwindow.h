@@ -277,6 +277,10 @@ private slots:
 
 	void on_actionPreferences_triggered();
 
+	void on_actionReport_or_track_an_issue_triggered();
+
+	void on_OverlapPixCheckBox_clicked(bool checked);
+
 private:
 	QString startingProjectFilename;
 	Ui::MainWindow *ui;

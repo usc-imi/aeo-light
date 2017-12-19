@@ -388,6 +388,7 @@ void MainWindow::LoadDefaults()
 	ui->rightPixSlider->setValue(intv);
 	ui->OverlapPixCheckBox->setChecked(
 			settings.value("pixbounds/use", false).toBool());
+	on_OverlapPixCheckBox_clicked(ui->OverlapPixCheckBox->isChecked());
 
 	intv = int(settings.value("framepitch/start", 0.1).toDouble() * h + 0.5);
 	ui->framepitchstartSlider->setValue(intv);
@@ -559,6 +560,7 @@ void MainWindow::ExtractionParametersToGUI(const ExtractedSound &params)
 {
 	ui->OverlapSoundtrackCheckBox->setChecked(params.useBounds);
 	ui->OverlapPixCheckBox->setChecked(params.usePixBounds);
+	on_OverlapPixCheckBox_clicked(ui->OverlapPixCheckBox->isChecked());
 
 	if(params.useBounds)
 	{
@@ -1253,6 +1255,8 @@ bool MainWindow::LoadProjectSettings(QString fn)
 		ui->CalEnableCB->setEnabled(true);
 	else if(needMask)
 		QTimer::singleShot(20, this, SLOT(on_CalBtn_clicked()));
+
+	on_OverlapPixCheckBox_clicked(ui->OverlapPixCheckBox->isChecked());
 
 	return true;
 }
@@ -3619,7 +3623,9 @@ void MainWindow::on_actionAbout_triggered()
 			"produced at the University of South Carolina by a team comprised "
 			"of faculty and staff from the University Libraries' Moving "
 			"Image Research Collections (MIRC) and the College of Arts and "
-			"Sciences Interdisciplinary Mathematics Institute (IMI). "
+			"Sciences Interdisciplinary Mathematics Institute (IMI), with "
+			"contributions from Tommy Aschenbach (Video & Film Solutions). "
+			"\n\n"
 			"Project funding comes from the Preservation and Access Division"
 			"of the National Endowment for the Humanities. AEO-Light is "
 			"available through an open-source licensing agreement. The "
@@ -3956,4 +3962,18 @@ void MainWindow::on_actionPreferences_triggered()
 	// so there's no additional processing to do here.
 
 	delete pref;
+}
+
+void MainWindow::on_actionReport_or_track_an_issue_triggered()
+{
+	QDesktopServices::openUrl(QUrl("https://github.com/usc-imi/aeo-light/issues"));
+}
+
+void MainWindow::on_OverlapPixCheckBox_clicked(bool checked)
+{
+	ui->pixLabel->setEnabled(checked);
+	ui->leftPixSpinBox->setEnabled(checked);
+	ui->rightPixSpinBox->setEnabled(checked);
+	ui->leftPixSlider->setEnabled(checked);
+	ui->rightPixSlider->setEnabled(checked);
 }
