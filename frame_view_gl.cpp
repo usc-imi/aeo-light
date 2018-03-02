@@ -320,8 +320,8 @@ Frame_Window::Frame_Window(int w,int h)
 	audio_float_texture = 0;
 	audio_int_texture = 0;
 	cal_audio_texture = 0;
-  vo.videobuffer=NULL;
-  is_videooutput=0;
+	vo.videobuffer=NULL;
+	is_videooutput=0;
 
 
 }
@@ -726,6 +726,27 @@ void Frame_Window::update_parameters()
 	m_program->setUniformValue(m_overlap_target_loc, overlap_target);
 }
 
+void Frame_Window::CopyFrameBuffer(GLuint fbo, int width, int height)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glDrawBuffer(GL_COLOR_ATTACHMENT1);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+	{
+		#ifndef __APPLE__
+		OGL_Fun.
+		#endif
+		glBlitFramebuffer(
+				0,0,width,height,
+				0,0,width,height,
+				GL_COLOR_BUFFER_BIT,GL_NEAREST);
+	}
+
+	glReadBuffer(0);
+	glDrawBuffer(0);
+}
+
 void Frame_Window::render()
 {
 
@@ -806,125 +827,14 @@ void Frame_Window::render()
 	CHECK_GL_ERROR(__FILE__,__LINE__);
 
 
-
-#define USE_GL_BLIT_FRAMEBUFFER
-
 	if(new_frame)
 	{
 		CUR_OP("binding adj_frame_fbo");
-
-		glBindFramebuffer(GL_FRAMEBUFFER, adj_frame_fbo);
-		CHECK_GL_ERROR(__FILE__,__LINE__);
-
-		glDrawBuffer(GL_COLOR_ATTACHMENT1);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glReadBuffer(GL_COLOR_ATTACHMENT0);
-		CHECK_GL_FBO(GL_DRAW_FRAMEBUFFER,__FILE__,__LINE__);
-		CHECK_GL_FBO(GL_READ_FRAMEBUFFER,__FILE__,__LINE__);
-
-		CUR_OP("glBlitFrameBuffer()");
-		#ifdef USE_GL_BLIT_FRAMEBUFFER
-        #ifndef __APPLE__
-		{
-			OGL_Fun.glBlitFramebuffer(0,0,input_w,input_h,0,0,input_w,input_h,
-					GL_COLOR_BUFFER_BIT,GL_NEAREST);
-		}
-		#else
-		{
-			glBlitFramebuffer(0,0,input_w,input_h,0,0,input_w,input_h,
-					GL_COLOR_BUFFER_BIT,GL_NEAREST);
-		}
-		#endif
-
-		#else
-
-		//************************Adjustment Render********************************
-		// Input Textures: frame_tex (original from file)
-		// Renders to: adj_frame_tex
-		// Description: applies color and density correction to image
-
-		bool jitteractive = false;
-
-		m_program->setUniformValue(m_rendermode_loc, 0.0f);
-		if(!new_frame || !jitteractive)
-			glVertexAttribPointer(m_texAttr, 3, GL_FLOAT, GL_FALSE, 0, verticesTex);
-		else
-			glVertexAttribPointer(m_texAttr, 3, GL_FLOAT, GL_FALSE, 0,
-					verticesTexJitter);
-
-		CHECK_GL_ERROR(__FILE__,__LINE__);
-		glBindFramebuffer(GL_FRAMEBUFFER,adj_frame_fbo);
-		glDrawBuffer(GL_COLOR_ATTACHMENT1);
-		glViewport(0,0, input_w, input_h);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
-		CHECK_GL_ERROR(__FILE__,__LINE__);
-
-		#endif // USE_GL_BLIT_FRAMEBUFFER
-
-		glDrawBuffer(0);
-		glReadBuffer(0);
+		CopyFrameBuffer(adj_frame_fbo, input_w, input_h);
 		CHECK_GL_ERROR(__FILE__,__LINE__);
 
 		CUR_OP("binding to audio_fbo");
-
-		glBindFramebuffer(GL_FRAMEBUFFER, audio_fbo);
-		glDrawBuffer(GL_COLOR_ATTACHMENT1);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glReadBuffer(GL_COLOR_ATTACHMENT0);
-
-		CUR_OP("glBlitFGrameBuffer() on audio_fbo");
-		#ifdef USE_GL_BLIT_FRAMEBUFFER
-         #ifndef __APPLE__
-		{
-			OGL_Fun.glBlitFramebuffer(0,0,2,samplesperframe,0,0,2,
-					samplesperframe,GL_COLOR_BUFFER_BIT,GL_NEAREST);
-		}
-		#else
-		{
-			glBlitFramebuffer(0,0,2,samplesperframe,0,0,2,
-					samplesperframe,GL_COLOR_BUFFER_BIT,GL_NEAREST);
-		}
-		#endif
-
-		#else
-
-		//********************************Audio RENDER*****************************
-		// Input Textures: adj_frame_texture (adjusted image texture)
-		// Renders to: audio_RGB_texture
-		// Description: steps through each line within x boundary and computes
-		//   value for display
-
-		m_program->setUniformValue(m_rendermode_loc, 1.0f);
-		glVertexAttribPointer(m_texAttr, 3, GL_FLOAT, GL_FALSE, 0, verticesTex);
-		CHECK_GL_ERROR(__FILE__,__LINE__);
-		glBindFramebuffer(GL_FRAMEBUFFER,audio_fbo);
-		glDrawBuffer(GL_COLOR_ATTACHMENT1);
-		glViewport(0,0, 2, samplesperframe);
-
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
-
-
-		CHECK_GL_ERROR(__FILE__,__LINE__);
-		glBindFramebuffer(GL_FRAMEBUFFER,audio_fbo);
-		glReadBuffer(GL_COLOR_ATTACHMENT1);
-		CHECK_GL_ERROR(__FILE__,__LINE__);
-
-		//copy float buffer out
-		glReadPixels(0,0,2,samplesperframe,GL_RED, GL_FLOAT,audio_compare_buffer);
-		fullarray = (static_cast<GLfloat*>(audio_compare_buffer));
-
-		GLfloat* subdminarray = &fullarray[samplesperframe-samplesperframe/4];
-		float dmin =0.0;// GetMin(subdminarray,samplesperframe/4);
-		float dmax =1.0;// GetMax(subdminarray,samplesperframe/4);
-		m_program->setUniformValue(dminmax_loc, dmin,dmax);
-
-		#endif // USE_GL_BLIT_FRAMEBUFFER
-
-		glDrawBuffer(0);
-		glReadBuffer(0);
+		CopyFrameBuffer(audio_fbo, 2, samplesperframe);
 		CHECK_GL_ERROR(__FILE__,__LINE__);
 	}
 

@@ -58,13 +58,13 @@ public:
 		float value;
 	} overlap_match;
 
-    typedef struct  {
-        GLuint video_output_fbo;
-        GLuint video_output_texture;
-        int width;
-        int height;
-        uint8_t * videobuffer;
-    } video_output;
+	typedef struct  {
+		GLuint video_output_fbo;
+		GLuint video_output_texture;
+		int width;
+		int height;
+		uint8_t * videobuffer;
+	} video_output;
 
 	void ParamUpdateCallback(FrameWindowCallbackFunction cb, void *userData);
 
@@ -86,7 +86,7 @@ public:
 	void SetCalibrationMask(const float *mask);
 	void update_parameters();// update gpu variables and rerender
 
-    video_output vo;
+	video_output vo;
 	// working data
 	float * *FileRealBuffer;
 
@@ -136,7 +136,7 @@ public:
 	bool overlapshow;
 	bool is_rendering;
 	bool is_debug;
-    bool is_videooutput;
+	bool is_videooutput;
 	int overrideOverlap;
 
 	float fps;
@@ -161,6 +161,8 @@ private:
 	GLuint loadShader(GLenum type, const char *source);
 	void gen_tex_bufs(); //generation of textures and buffers
 	bool new_frame; //is a new frame from seq
+
+	void CopyFrameBuffer(GLuint fbo, int width, int height);
 
 	GLenum *audio_draw_buffers;
 	GLuint audio_pbo;

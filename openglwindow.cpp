@@ -37,7 +37,11 @@ OpenGLWindow::OpenGLWindow(QWindow *parent)
 	, m_context(0)
 	, m_device(0)
 {
-	setSurfaceType(QWindow::OpenGLSurface);
+	/*
+	this->format().setProfile(QSurfaceFormat::CoreProfile);
+	this->format().setVersion(4,1);
+	*/
+	this->setSurfaceType(QWindow::OpenGLSurface);
 }
 
 OpenGLWindow::~OpenGLWindow()

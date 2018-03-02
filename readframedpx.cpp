@@ -197,28 +197,53 @@ unsigned char* ReadFrameDPX_ImageData(const char *dpxfn, unsigned char *buf,
 
 	int numChannels = dpx.header.ImageElementComponentCount(0);
 	int pixel_size; //in bytes;
+	bool doRawRead(false);
+	int remainder(0);
 
-	if(dpx.header.BitDepth(0) == 10)
+	width=dpx.header.Width();
+	height= dpx.header.Height();
+
+	if(dpx.header.BitDepth(0) == 10 && numChannels == 3)
 	{
 		pix_fmt = GL_UNSIGNED_INT_10_10_10_2;
-		bufSize = dpx.header.Width() * dpx.header.Height() * 4;
+		bufSize = width * height * 4;
 		num_components=4;
 		pixel_size=4;
+		doRawRead = true;
 	}
 	else if (dpx.header.BitDepth(0) == 16 && numChannels ==3)
 	{
 		// XXX: Why 8 instead of pixel_size of 6?
-		bufSize = dpx.header.Width() * dpx.header.Height() * 8;
+		bufSize = width * height * 8;
 		pix_fmt = GL_UNSIGNED_SHORT;
 		num_components=3;
 		pixel_size = 6;
+		doRawRead = true;
 	}
-	else //16bit luma
+	else if(dpx.header.BitDepth(0) == 16 && numChannels == 1) //16bit luma
 	{
-		bufSize = dpx.header.Width() * dpx.header.Height() * 2;
+		bufSize = width * height * 2;
 		pix_fmt = GL_UNSIGNED_SHORT;
 		num_components=1;
 		pixel_size = 2;
+		doRawRead = true;
+	}
+	else
+	{
+		if(
+				dpx.header.ImageElementComponentCount(0) == 1 &&
+				dpx.header.BitDepth(0)==10 &&
+				dpx.header.ImagePacking(0) == 1 &&
+				dpx.header.Width() % 3 != 0 )
+		{
+			remainder = 3 - (width % 3);
+		}
+
+		bufSize = width * height * numChannels * 2;
+		num_components = numChannels;
+		pix_fmt = GL_UNSIGNED_SHORT;
+		pixel_size = 2;
+		doRawRead = false;
 	}
 
 	if(buf == NULL)
@@ -228,13 +253,91 @@ unsigned char* ReadFrameDPX_ImageData(const char *dpxfn, unsigned char *buf,
 			throw AeoException("Out of Memory: DPX image buf");
 	}
 
-	dpx.fd->Seek( dpx.header.imageOffset,dpx.fd->kStart);
-	width=dpx.header.Width();
-	height= dpx.header.Height();
+	if(doRawRead)
+	{
+		endian=dpx.header.RequiresByteSwap();
 
-	endian=dpx.header.RequiresByteSwap();
-	dpx.fd->Read(buf,dpx.header.Width() * dpx.header.Height() * pixel_size);
+		dpx.fd->Seek( dpx.header.imageOffset,dpx.fd->kStart);
+		dpx.fd->Read(buf,dpx.header.Width() * dpx.header.Height() * pixel_size);
+	}
+	else
+	{
+		if(!remainder)
+		{
+			if(!dpx.ReadImage(buf, kWord, dpx.header.ImageDescriptor(0)))
+				throw("This DPX encoding is not supported (e.g., RLE)");
+		}
+		else
+		{
+			// remainder non-zero means that the DPX is grayscale with
+			// 10-bit samples packed three-to-a-word, but the image width
+			// is not divisible by 3
+			// opendpx cannot read this properly (it requires the scanlines
+			// to break on word boundaries), so we have to read it ourselves
+			// and unpack it manually.
+
+			int numWords = ceil(double(width*height)/3.0);
+			static uint32_t *wbuf(NULL);
+			if(wbuf == NULL)
+			{
+				// make a buffer to hold the 32-bit words
+				wbuf = new uint32_t[numWords];
+				if(wbuf == NULL)
+					throw AeoException("Out of Memory: DPX word buf");
+
+			}
+
+			// read in the whole array of 32-bit words from the DPX file
+			dpx.fd->Seek(dpx.header.imageOffset, dpx.fd->kStart);
+			dpx.fd->Read(wbuf, numWords*sizeof(uint32_t));
+
+			// swap the bytes in the words if necessary
+			if(dpx.header.RequiresByteSwap())
+			{
+				for(int w=0; w<numWords; ++w)
+				{
+					uint32_t *cp = wbuf+w;
+					*cp = (*cp >> 16) | (*cp << 16);
+					*cp = ((*cp & 0xFF00FF00) >> 8) | ((*cp & 0x00FF00FF) << 8);
+				}
+			}
+
+			// use a proxy to more easily enter the extracted sample values
+			// as 16-bit words in the buf array.
+			uint16_t *ubuf;
+			ubuf = reinterpret_cast<uint16_t *>(buf);
+
+			uint32_t *word; // pointer into wbuf
+			// double scale = 65535.0 / 1023.0; // scale 10-bit to 16-bit
+
+			int nSample = 0; // number of samples remaining in the current word
+			word = wbuf; // start at the beginning of the buffer
+			for(int i=0; i<width*height; ++i)
+			{
+				if(nSample==0)
+				{
+					word++;
+					nSample = 3;
+					*word >>=2; // remove the fill bits
+				}
+				// unpack the 10-bit word and rescale it to 16 bits
+				// ubuf[i] = uint16_t(((*word) & 0x03FF) * scale);
+				// approximate this scaling with bit operations for speed:
+				ubuf[i] = *word & 0x03FF;
+				ubuf[i] = (ubuf[i] << 6) | (ubuf[i] >> 4);
+				// shift the 32-bit word down and update the packed count
+				(*word) >>= 10;
+				nSample--;
+			}
+		}
+
+		// either way, we've already swapped the bytes if it was needed.
+		endian = false;
+
+	}
+
 	img.Close();
+
 	return buf;
 
 }

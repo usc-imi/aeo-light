@@ -90,8 +90,12 @@ extern "C"
 #ifdef _WIN32
 #define aeo_av_err2str(n) "MSVC Cannot Show This Error"
 #else
-#define aeo_av_err2str(n) av_err2str(n)
+//#define aeo_av_err2str(n) av_err2str(n)
+#define aeo_av_err2str(errnum) \
+	av_make_error_string((char*)__builtin_alloca(AV_ERROR_MAX_STRING_SIZE), \
+	AV_ERROR_MAX_STRING_SIZE, errnum)
 #endif
+
 
 #endif // ifdef USE_MUX_HACK
 
@@ -469,7 +473,7 @@ void MainWindow::LicenseAgreement()
 	msg.setText("License Agreement");
 	msg.setInformativeText(
 			"-------------------------------------------------------------------------------------------------\n"
-			"Copyright (c) 2015-2017 South Carolina Research Foundation\n"
+			"Copyright (c) 2015-2018 South Carolina Research Foundation\n"
 			"All Rights Reserved\n"
 			"See [Details] below for the full license agreement.\n");
 
@@ -889,6 +893,86 @@ bool MainWindow::NewSource(QString filename, SourceFormat ft)
 	{
 		traceCurrentOperation = "Opening Source";
 		this->scan.SourceScan(filename.toStdString(), ft);
+		traceCurrentOperation = "Verifying scan is ready";
+		if(this->scan.inFile.IsReady())
+		{
+			if(frame_window)
+			{
+				traceCurrentOperation="Closing previous frame window";
+				frame_window->currentOperation = &traceSubroutineOperation;
+				frame_window->close();
+				traceCurrentOperation="Deleting previous frame window";
+				delete frame_window;
+			}
+
+			traceCurrentOperation = "Creating new frame window";
+			frame_window = new Frame_Window(
+						this->scan.inFile.Width(),this->scan.inFile.Height());
+
+			frame_window->currentOperation = &traceSubroutineOperation;
+			frame_window->setTitle(filename);
+			frame_window->ParamUpdateCallback(&(this->GUI_Params_Update_Static),this);
+
+			Log() << "New frame window\n";
+			frame_window->logger = &Log();
+
+			traceCurrentOperation = "Resizing window to 640x640";
+			frame_window->resize(640, 640);
+
+			traceCurrentOperation = "Showing frame window";
+			frame_window->show();
+			qApp->processEvents();
+
+			traceCurrentOperation = "Updating GUI controls for new source";
+			ui->frameInSpinBox->setValue(this->scan.inFile.FirstFrame());
+			ui->frameInTimeCodeLabel->setText(Compute_Timecode_String(0));
+			ui->frameOutSpinBox->setValue(this->scan.inFile.LastFrame());
+			ui->frameOutTimeCodeLabel->setText(
+						Compute_Timecode_String(this->scan.inFile.NumFrames()-1));
+			ui->frameNumberTimeCodeLabel->setText(Compute_Timecode_String(0));
+
+			ui->rightSpinBox->setMaximum(this->scan.inFile.Width()-1);
+			ui->leftSpinBox->setMaximum(this->scan.inFile.Width()-1);
+			ui->rightSlider->setMaximum(this->scan.inFile.Width()-1);
+			ui->leftSlider->setMaximum(this->scan.inFile.Width()-1);
+
+			ui->rightPixSpinBox->setMaximum(this->scan.inFile.Width()-1);
+			ui->leftPixSpinBox->setMaximum(this->scan.inFile.Width()-1);
+			ui->rightPixSlider->setMaximum(this->scan.inFile.Width()-1);
+			ui->leftPixSlider->setMaximum(this->scan.inFile.Width()-1);
+
+			ui->leftPixSlider->setValue(int(this->scan.inFile.Width() * 0.475));
+			ui->leftPixSpinBox->setValue(int(this->scan.inFile.Width() * 0.475));
+			ui->rightPixSlider->setValue(int(this->scan.inFile.Width() * 0.525));
+			ui->rightPixSpinBox->setValue(int(this->scan.inFile.Width() * 0.525));
+
+			ui->playSlider->setMaximum(this->scan.inFile.NumFrames()-1);
+
+			// finalize UI with user preferences
+			LoadDefaults();
+
+			// enable the rest of the UI that was waiting until a project loaded
+			ui->actionSave_Settings->setEnabled(true);
+			ui->actionShow_Overlap->setEnabled(true);
+			ui->actionShow_Soundtrack_Only->setEnabled(true);
+			ui->actionWaveform_Zoom->setEnabled(true);
+			ui->menuView->setEnabled(true);
+			ui->saveprojectButton->setEnabled(true);
+			ui->loadSettingsButton->setEnabled(true);
+			ui->tabWidget->setEnabled(true);
+			RecursivelyEnable(ui->viewOptionsLayout, true);
+			RecursivelyEnable(ui->frameNumberLayout, true);
+			//RecursivelyEnable(ui->sampleLayout, false);
+			ui->playSampleButton->setEnabled(true);
+			ui->autoLoadSettingsCheckBox->setEnabled(true);
+
+			traceCurrentOperation = "Updating GPU params";
+			GPU_Params_Update(0);
+			traceCurrentOperation = "Displaying first frame";
+
+			Load_Frame_Texture(0);
+		}
+
 	}
 	catch(std::exception &e)
 	{
@@ -905,85 +989,6 @@ bool MainWindow::NewSource(QString filename, SourceFormat ft)
 
 		if(answer == QMessageBox::Abort) exit(1);
 		return false;
-	}
-
-	traceCurrentOperation = "Verifying scan is ready";
-	if(this->scan.inFile.IsReady())
-	{
-		if(frame_window)
-		{
-			traceCurrentOperation="Closing previous frame window";
-			frame_window->currentOperation = &traceSubroutineOperation;
-			frame_window->close();
-			traceCurrentOperation="Deleting previous frame window";
-			delete frame_window;
-		}
-
-		traceCurrentOperation = "Creating new frame window";
-		frame_window = new Frame_Window(
-				this->scan.inFile.Width(),this->scan.inFile.Height());
-		frame_window->currentOperation = &traceSubroutineOperation;
-		frame_window->setTitle(filename);
-		frame_window->ParamUpdateCallback(&(this->GUI_Params_Update_Static),this);
-
-		Log() << "New frame window\n";
-		frame_window->logger = &Log();
-
-		traceCurrentOperation = "Resizing window to 640x640";
-		frame_window->resize(640, 640);
-
-		traceCurrentOperation = "Showing frame window";
-		frame_window->show();
-		qApp->processEvents();
-
-		traceCurrentOperation = "Updating GUI controls for new source";
-		ui->frameInSpinBox->setValue(this->scan.inFile.FirstFrame());
-		ui->frameInTimeCodeLabel->setText(Compute_Timecode_String(0));
-		ui->frameOutSpinBox->setValue(this->scan.inFile.LastFrame());
-		ui->frameOutTimeCodeLabel->setText(
-				Compute_Timecode_String(this->scan.inFile.NumFrames()-1));
-		ui->frameNumberTimeCodeLabel->setText(Compute_Timecode_String(0));
-
-		ui->rightSpinBox->setMaximum(this->scan.inFile.Width()-1);
-		ui->leftSpinBox->setMaximum(this->scan.inFile.Width()-1);
-		ui->rightSlider->setMaximum(this->scan.inFile.Width()-1);
-		ui->leftSlider->setMaximum(this->scan.inFile.Width()-1);
-
-		ui->rightPixSpinBox->setMaximum(this->scan.inFile.Width()-1);
-		ui->leftPixSpinBox->setMaximum(this->scan.inFile.Width()-1);
-		ui->rightPixSlider->setMaximum(this->scan.inFile.Width()-1);
-		ui->leftPixSlider->setMaximum(this->scan.inFile.Width()-1);
-
-		ui->leftPixSlider->setValue(int(this->scan.inFile.Width() * 0.475));
-		ui->leftPixSpinBox->setValue(int(this->scan.inFile.Width() * 0.475));
-		ui->rightPixSlider->setValue(int(this->scan.inFile.Width() * 0.525));
-		ui->rightPixSpinBox->setValue(int(this->scan.inFile.Width() * 0.525));
-
-		ui->playSlider->setMaximum(this->scan.inFile.NumFrames()-1);
-
-		// finalize UI with user preferences
-		LoadDefaults();
-
-		// enable the rest of the UI that was waiting until a project loaded
-		ui->actionSave_Settings->setEnabled(true);
-		ui->actionShow_Overlap->setEnabled(true);
-		ui->actionShow_Soundtrack_Only->setEnabled(true);
-		ui->actionWaveform_Zoom->setEnabled(true);
-		ui->menuView->setEnabled(true);
-		ui->saveprojectButton->setEnabled(true);
-		ui->loadSettingsButton->setEnabled(true);
-		ui->tabWidget->setEnabled(true);
-		RecursivelyEnable(ui->viewOptionsLayout, true);
-		RecursivelyEnable(ui->frameNumberLayout, true);
-		//RecursivelyEnable(ui->sampleLayout, false);
-		ui->playSampleButton->setEnabled(true);
-		ui->autoLoadSettingsCheckBox->setEnabled(true);
-
-		traceCurrentOperation = "Updating GPU params";
-		GPU_Params_Update(0);
-		traceCurrentOperation = "Displaying first frame";
-
-		Load_Frame_Texture(0);
 	}
 
 	traceCurrentOperation = "";
@@ -1707,6 +1712,8 @@ void MainWindow::on_playSampleButton_clicked()
 		numFrames = this->scan.inFile.LastFrame() -
 				ui->frameInSpinBox->value();
 	}
+
+	this->currentMeta = NULL;
 
 	sample = Extract(qtmp.fileName(), QString(), firstFrame, numFrames, EXTRACT_LOG);
 
