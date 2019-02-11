@@ -157,6 +157,7 @@ void ExtractDialog::on_cancelButton_clicked()
 
 void ExtractDialog::on_okButton_clicked()
 {
+	meta->description = ui->descriptionText->text();
 	meta->originator = ui->originatorDisplay->text();
 	meta->originatorReference = ui->originatorReferenceText->text();
 	meta->comment = ui->subjectText->text();

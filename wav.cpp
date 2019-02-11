@@ -99,8 +99,8 @@ FILE *wav::open(const char *fn)
 
 	bytesPerSec = samplesPerSec * bitsPerSample * nChannels;
 	blockAlign = bitsPerSample * nChannels / 8;
-	dataChunkSize = samplesPerFrame * blockAlign;
-	riffSize = dataChunkSize + 36;
+	dataChunkSize = 0;
+	numframes = 0;
 
 	audio_file = fopen(fn, "wb+");
 	if(audio_file==NULL)
@@ -214,7 +214,11 @@ void wav::close()
 	bytesPerSec = samplesPerSec * (bitsPerSample/8) * nChannels;
 	blockAlign = bitsPerSample * nChannels / 8;
 	dataChunkSize = numframes*samplesPerFrame* blockAlign;
-	riffSize = dataChunkSize+ bwfckSize + 36;
+
+	// riffSize = dataChunkSize + bwfckSize + 134
+	// (134 = fmt+list+4*8+4, 4*8 = chunk headers, +4 for the "WAVE")
+	// but we'll just calculate that at file close, so as to handle
+	// any other chunks that developers may include later.
 
 	if(audio_file==NULL)
 	{
@@ -229,6 +233,7 @@ void wav::close()
 	fwrite(&(this->TimeReferenceLow), 364, 1, audio_file);
 
 	// update the header regarding the size of the data:
+	riffSize = ftell(audio_file)-8;
 	fseek ( audio_file , 0 , SEEK_SET );
 	fwrite(this, 44, 1, audio_file);
 
