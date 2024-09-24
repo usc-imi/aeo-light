@@ -2,17 +2,17 @@
 Copyright and Open Source Software License
 ----------------------------------------------------------------------
 
-Copyright (c) 2015-2019 South Carolina Research Foundation
+Copyright (c) 2024 South Carolina Research Foundation
 All Rights Reserved
 
-AEO-Light, Ver. 2.3.3
-Greg Wilsbacher, Pencho Petrushev, L. Scott Johnson, Tommy Aschenbach,
+Virtual Film Bench, Ver. 0.6
+Tommy Aschenbach, Greg Wilsbacher, L. Scott Johnson,
 and the South Carolina Research Foundation
 
 Open Source Software License
 
 This Open Source Software License ("License") applies to the original
-work of authorship, herein known as AEO-Light ("Original Work") whose
+work of authorship, herein known as Virtual Film Bench ("Original Work") whose
 owner, South Carolina Research Foundation, ("Licensor") has placed the
 following licensing terms and conditions adjacent to the copyright
 notice for the Original Work:
