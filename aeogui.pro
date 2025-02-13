@@ -1,14 +1,14 @@
 #-----------------------------------------------------------------------------
-# This file is part of Virtual Film Bench
+# This file is part of AEO-Light
 #
-# Copyright (c) 2024 University of South Carolina and Thomas Aschenbach
+# Copyright (c) 2016 University of South Carolina
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
 # Free Software Foundation; either version 2 of the License, or (at your
 # option) any later version.
 #
-# Virtual Film Bench is distributed in the hope that it will be useful, but
+# AEO-Light is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
 # for more details.
@@ -17,7 +17,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
-# Funding for Virtual Film Bench development was provided through a grant from the
+# Funding for AEO-Light development was provided through a grant from the
 # National Endowment for the Humanities
 #-----------------------------------------------------------------------------
 
@@ -25,7 +25,7 @@
 #
 # place libraries and include files in system locations like /usr/local/lib
 # on unix and osx, or under C:\include and C:\lib under windows, or put
-# them or link them to the Virtual Film Bench source directory tree either directly
+# them or link them to the AEO-Light source directory tree either directly
 # or under subdirectories called "release" and "debug"
 #
 # Or add the appropriate paths to the platform-specific sections of this
