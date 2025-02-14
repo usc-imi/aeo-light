@@ -78,7 +78,7 @@ void Frame_Window::CheckGLError(const char *fn, int line)
 	int answer;
 	static bool show = true;
 
-#ifndef _WIN32
+#ifndef Q_OS_WIN32
 	while((glerror = glGetError()) != GL_NO_ERROR)
 	{
 		msg += QString("GL Error in %1 at line %2:\n%3\n").arg(
@@ -111,7 +111,11 @@ void Frame_Window::CheckGLError(const char *fn, int line)
 #endif
 }
 
+#ifdef Q_DEBUG
 #define CHECK_GL_ERROR(f,l) CheckGLError(f,l)
+#else
+#define CHECK_GL_ERROR(f,l) {}
+#endif
 
 const char *gluFBOString(GLenum fbos)
 {
@@ -260,6 +264,8 @@ Frame_Window::Frame_Window(int w,int h)
 
 	pixbounds[0] = pixbounds[1] = 0;
 
+    rot_angle = 0.0;
+
 	match_inc=0;
 	height_inc= 0;
 
@@ -304,6 +310,7 @@ Frame_Window::Frame_Window(int w,int h)
 	dminmax_loc = 0;
 	m_colorcontrol_loc = 0;
 	m_bounds_loc = 0;
+    m_rot_angle = 0;
 	m_calcontrol_loc = 0;
 	m_overlapshow_loc = 0;
 	frame_texture = 0;
@@ -450,7 +457,10 @@ void Frame_Window::initialize()
 	m_texAttr = m_program->attributeLocation("texCoord");
 	m_matrixUniform = m_program->uniformLocation("matrix");
 	m_bounds_loc = m_program->uniformLocation("bounds");
-	m_neg_loc = m_program->uniformLocation("negative");
+
+    m_rot_angle= m_program->uniformLocation("rot_angle");
+
+    m_neg_loc = m_program->uniformLocation("negative");
 	stereo_loc=  m_program->uniformLocation("isstereo");
 	dminmax_loc = m_program->uniformLocation("dminmax");
 	m_rendermode_loc = m_program->uniformLocation("render_mode");
@@ -713,6 +723,7 @@ void Frame_Window::update_parameters()
 			blur);
 	m_program->setUniformValue(m_bounds_loc,
 			bounds[0],bounds[1],bounds[2],bounds[3]);
+    m_program->setUniformValue(m_rot_angle, rot_angle);
 	m_program->setUniformValue(pix_bounds_loc,pixbounds[0],pixbounds[1]);
 	m_program->setUniformValue(m_overlap_loc,
 			overlap[0],overlap[1],overlap[2],overlap[3]);
@@ -1515,10 +1526,6 @@ void Frame_Window::mouseReleaseEvent(QMouseEvent *mouse)
 
 void Frame_Window::mouseEvent(QMouseEvent *mouse)
 {
-
-	// Windows wants to call this function early (and crash).
-	// so restrict it for now. It's just convenience UI.
-	#ifndef _WIN32
 	static float x,y,ny;
 	static int grab = -1;
 	static int hover = -1;
@@ -1614,5 +1621,4 @@ void Frame_Window::mouseEvent(QMouseEvent *mouse)
 
 		this->renderNow();
 	}
-	#endif
 }

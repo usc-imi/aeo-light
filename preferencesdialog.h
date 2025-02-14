@@ -24,8 +24,9 @@
 #define PREFERENCESDIALOG_H
 
 #include <QAbstractButton>
-#include <QSettings>
 #include <QDialog>
+#include <QLineEdit>
+#include <QSettings>
 
 namespace Ui {
 class preferencesdialog;
@@ -40,21 +41,9 @@ public:
 	~preferencesdialog();
 
 private slots:
-	void on_browseForSourceButton_clicked();
-
-	void on_browseForProjectButton_clicked();
-
-	void on_browseForExportButton_clicked();
-
-	void on_sourceText_editingFinished();
-
-	void on_discardButton_clicked();
-
-	void on_saveButton_clicked();
-
-	void on_projectText_editingFinished();
-
-	void on_exportText_editingFinished();
+    void BrowseForFolder(QLineEdit *lineEdit, QString title, QString dflt);
+    void ValidateFolder(QString dflt);
+    void Save();
 
 private:
 	Ui::preferencesdialog *ui;

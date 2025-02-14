@@ -25,14 +25,17 @@
 
 #include <QApplication>
 #include <QByteArray>
+#include <QtCompilerDetection>
 #include <QProcess>
 #include <QDebug>
+#include <QDialogButtonBox>
 #include <QSettings>
 #include <QVersionNumber>
 #include <QFileDialog>
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
+#include <QDomDocument>
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QMessageBox>
@@ -43,6 +46,7 @@
 #include <QMouseEvent>
 #include <QDateTime>
 #include <QTemporaryFile>
+#include <QTextEdit>
 #include <QScrollArea>
 #include <QProgressDialog>
 #include <QStandardPaths>
@@ -88,7 +92,7 @@ extern "C"
 // MSVC does not understand.
 // Ref: https://ffmpeg.zeranoe.com/forum/viewtopic.php?t=4220
 // Ref: https://stackoverflow.com/questions/3869963/compound-literals-in-msvc
-#ifdef _WIN32
+#ifdef Q_CC_MSVC
 #define aeo_av_err2str(n) "MSVC Cannot Show This Error"
 #else
 //#define aeo_av_err2str(n) av_err2str(n)
@@ -222,7 +226,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-	#ifdef _WIN32
+    #ifdef Q_OS_WIN
 	QString fontsize = "18pt";
 	#else
 	QString fontsize = "24pt";
@@ -243,7 +247,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->appNameLabel->setText(
 			QString("<html><head/><body><p><span style=\" font-size:"
 			+ fontsize + ";\">")
-			+ Version() + QString("</span></p></body></html>"));
+            + Version() + QString("</span></p></body></html>"));
 
 	ui->FramePitchendSlider->setValue(this->scan.overlapThreshold);
 
@@ -268,12 +272,20 @@ MainWindow::MainWindow(QWidget *parent) :
 	RecursivelyEnable(ui->viewOptionsLayout, false);
 	RecursivelyEnable(ui->frameNumberLayout, false);
 	RecursivelyEnable(ui->sampleLayout, false);
+    UpdateQueueWidgets();
+
+    // turn of fthe XML sidecard stuff
+    ui->xmlSidecarComboBox->setVisible(false);
+    ui->xmlSidecarLabel->setVisible(false);
+
+    ui->filmrate_PD->setCurrentIndex(1); // default to 24fps
 
 	// skip license agreement if the user has already agreed to this version
 	QSettings settings;
 	QString ag = settings.value("license","0.1").toString();
 	QVersionNumber agv = QVersionNumber::fromString(ag);
 	QVersionNumber thisv = QVersionNumber::fromString(APP_VERSION);
+
 
 	Log() << "Starting project: " << startingProjectFilename << "\n";
 
@@ -302,6 +314,31 @@ MainWindow::MainWindow(QWidget *parent) :
 	encAudioLen = 0;
 	encAudioNextPts = 0;
 	#endif
+
+    connect(ui->queueLoad1Button, &QPushButton::clicked,
+            this, [this](){ this->QueueLoadSettings(0); });
+    connect(ui->queueLoad2Button, &QPushButton::clicked,
+            this, [this](){ this->QueueLoadSettings(1); });
+    connect(ui->queueLoad3Button, &QPushButton::clicked,
+            this, [this](){ this->QueueLoadSettings(2); });
+    connect(ui->queueLoad4Button, &QPushButton::clicked,
+            this, [this](){ this->QueueLoadSettings(3); });
+    connect(ui->queueLoad5Button, &QPushButton::clicked,
+            this, [this](){ this->QueueLoadSettings(4); });
+
+    connect(ui->queueUpdate1Button, &QPushButton::clicked,
+            this, [this](){ this->QueueUpdateSettings(0); });
+    connect(ui->queueUpdate2Button, &QPushButton::clicked,
+            this, [this](){ this->QueueUpdateSettings(1); });
+    connect(ui->queueUpdate3Button, &QPushButton::clicked,
+            this, [this](){ this->QueueUpdateSettings(2); });
+    connect(ui->queueUpdate4Button, &QPushButton::clicked,
+            this, [this](){ this->QueueUpdateSettings(3); });
+    connect(ui->queueUpdate5Button, &QPushButton::clicked,
+            this, [this](){ this->QueueUpdateSettings(4); });
+
+    connect(ui->queueImportVFBClipsButton, &QPushButton::clicked,
+            this, &MainWindow::QueueImportVFB);
 }
 
 MainWindow::~MainWindow()
@@ -467,34 +504,46 @@ void MainWindow::LoadDefaults()
 
 void MainWindow::LicenseAgreement()
 {
-	QMessageBox msg(this);
-	QString lic;
 	QFile licFile(":/LICENSE.txt");
-
-	msg.setText("License Agreement");
-	msg.setInformativeText(
-			"-------------------------------------------------------------------------------------------------\n"
-			"Copyright (c) 2015-2018 South Carolina Research Foundation\n"
-			"All Rights Reserved\n"
-			"See [Details] below for the full license agreement.\n");
 
 	if(!licFile.open(QIODevice::ReadOnly))
 	{
 		exit(1);
 	}
-
 	QTextStream licStream(&licFile);
-	lic = licStream.readAll();
+    QString lic = licStream.readAll();
 	licFile.close();
 
-	msg.setDetailedText(lic);
+    QDialog msg(this);
+    QLabel *label;
+    msg.setWindowTitle("License Agreement");
+    QVBoxLayout vbox(&msg);
+    label = new QLabel("<b>License Agreement</b>");
+    vbox.addWidget(label,0,Qt::AlignCenter);
+    label = new QLabel("Copyright (c) 2024 South Carolina Research Foundation");
+    vbox.addWidget(label,0,Qt::AlignLeft);
+    label = new QLabel("All Rights Reserved");
+    vbox.addWidget(label,0,Qt::AlignLeft);
 
-	msg.addButton("Accept Licence", QMessageBox::AcceptRole);
-	msg.addButton(QMessageBox::Cancel);
-	int ret = msg.exec();
+    QTextEdit *text = new QTextEdit();
+    text->setText(lic);
+    QFontMetrics fm = text->fontMetrics();
+    int w = fm.averageCharWidth();
+    text->setMinimumWidth(w*80);
+    vbox.addWidget(text,1);
 
-	if(ret == QMessageBox::Cancel)
-		exit(0);
+    QDialogButtonBox *buttonBox =
+        new QDialogButtonBox(QDialogButtonBox::Cancel);
+    QPushButton *acceptButton = new QPushButton("Accept License");
+    buttonBox->addButton(acceptButton, QDialogButtonBox::AcceptRole);
+    QObject::connect(buttonBox, SIGNAL(accepted()), &msg, SLOT(accept()));
+    QObject::connect(buttonBox, SIGNAL(rejected()), &msg, SLOT(reject()));
+
+    vbox.addWidget(buttonBox);
+
+    int ret = msg.exec();
+
+    if(ret != QMessageBox::Accepted) exit(0);
 
 	QSettings settings;
 	settings.setValue("license",APP_VERSION);
@@ -705,6 +754,11 @@ void MainWindow::GPU_Params_Update(bool renderyes)
 		frame_window->desaturate = ui->desatBox->checkState();
 		frame_window->overlapshow = ui->actionShow_Overlap->isChecked();
 
+        if(ui->rotateCheckbox->isChecked())
+            frame_window->rot_angle = ui->degreeSpinBox->value();
+        else
+            frame_window->rot_angle = 0.0f;
+
 		// Note: if none are checked, we still use the soundtrack (target=1)
 		if(ui->OverlapPixCheckBox->isChecked())
 		{
@@ -814,11 +868,11 @@ void MainWindow::on_sourceButton_clicked()
 		SourceFormat fileType;
 		const char *filter;
 	} fileFilterArr[] = {
-		{ SOURCE_DPX,       "DPX frames (*.dpx)" },
-		{ SOURCE_LIBAV,     "Video files (*.mp4 *.mov *.avi)" },
-		{ SOURCE_WAV,       "Synthetic (*.wav)" },
-		{ SOURCE_TIFF,      "TIFF frames (*.tif *.tiff)" },
-		{ SOURCE_UNKNOWN,   "" }
+        { SOURCE_LIBAV,     "Video files (*.mp4 *.mov *.avi)" },
+        { SOURCE_DPX,       "DPX frames (*.dpx)" },
+        { SOURCE_TIFF,      "TIFF frames (*.tif *.tiff)" },
+        { SOURCE_WAV,       "Synthetic (*.wav)" },
+        { SOURCE_UNKNOWN,   "" }
 	};
 
 	int ft;
@@ -1648,7 +1702,7 @@ bool MainWindow::extractGL(QString filename=QString(), bool doTimer=false)
 
 		if(msg.clickedButton() == viewButton)
 		{
-			#ifdef _WIN32
+            #ifdef Q_OS_WIN32
 			system(QString("start %1/%2").arg(QDir::homePath(),"AEO-log.txt")
 					.toStdString().c_str());
 			#else
@@ -3674,7 +3728,7 @@ void MainWindow::DeleteTempSoundFile(void)
 //----------------------------------------------------------------------------
 QTextStream &MainWindow::Log()
 {
-	#ifdef _WIN32
+    #ifdef Q_OS_WIN32
 	static QFile logfile(QString("%1/%2").arg(QDir::homePath(),
 			"AEO-log.txt"));
 	#else
@@ -3856,7 +3910,21 @@ void MainWindow::UpdateQueueWidgets(void)
 	btn[3] = ui->queueDelete4Button;
 	btn[4] = ui->queueDelete5Button;
 
-	for(i=0; i<this->extractQueue.size(); ++i)
+    QPushButton *loadBtn[5];
+    loadBtn[0] = ui->queueLoad1Button;
+    loadBtn[1] = ui->queueLoad2Button;
+    loadBtn[2] = ui->queueLoad3Button;
+    loadBtn[3] = ui->queueLoad4Button;
+    loadBtn[4] = ui->queueLoad5Button;
+
+    QPushButton *updateBtn[5];
+    updateBtn[0] = ui->queueUpdate1Button;
+    updateBtn[1] = ui->queueUpdate2Button;
+    updateBtn[2] = ui->queueUpdate3Button;
+    updateBtn[3] = ui->queueUpdate4Button;
+    updateBtn[4] = ui->queueUpdate5Button;
+
+    for(i=0; i<this->extractQueue.size(); ++i)
 	{
 		label[i]->setText(
 				QString("%1-%2 %3").
@@ -3865,6 +3933,8 @@ void MainWindow::UpdateQueueWidgets(void)
 				arg(QFileInfo(extractQueue[i].source).fileName()));
 		label[i]->setEnabled(true);
 		btn[i]->setEnabled(true);
+        loadBtn[i]->setEnabled(true);
+        updateBtn[i]->setEnabled(true);
 	}
 	ui->queueExtractButton->setEnabled(i>0);
 	for(i=this->extractQueue.size(); i<5; ++i)
@@ -3872,7 +3942,9 @@ void MainWindow::UpdateQueueWidgets(void)
 		label[i]->setText("Not Set");
 		label[i]->setEnabled(false);
 		btn[i]->setEnabled(false);
-	}
+        loadBtn[i]->setEnabled(false);
+        updateBtn[i]->setEnabled(false);
+    }
 }
 
 
@@ -3904,6 +3976,326 @@ void MainWindow::on_queueDelete5Button_clicked()
 {
 	this->extractQueue.erase(extractQueue.begin()+4);
 	UpdateQueueWidgets();
+}
+
+void MainWindow::QueueLoadSettings(size_t idx)
+{
+    if(extractQueue.size() <= idx) return;
+    if(extractQueue.at(idx).source != QString(scan.inFile.GetFileName().c_str()))
+    {
+        int ret = QMessageBox::question(
+            this, tr("Source Differs"),
+            tr("This queue item is for a different source.\n")+
+               extractQueue.at(idx).source,
+            QMessageBox::Ok | QMessageBox::Cancel,
+            QMessageBox::Ok);
+        if(ret == QMessageBox::Cancel) return;
+    }
+    ExtractionParametersToGUI(extractQueue.at(idx).params);
+    ui->frame_numberSpinBox->setValue(extractQueue.at(idx).params.frameIn);
+}
+
+void MainWindow::QueueUpdateSettings(size_t idx)
+{
+    if(extractQueue.size() <= idx) return;
+    if(extractQueue.at(idx).source != QString(scan.inFile.GetFileName().c_str()))
+    {
+        int ret = QMessageBox::question(
+            this, tr("Source Differs"),
+            tr("This queue item is for a different source.\n")+
+                extractQueue.at(idx).source,
+            QMessageBox::Ok | QMessageBox::Cancel,
+            QMessageBox::Ok);
+        if(ret == QMessageBox::Cancel) return;
+    }
+    ExtractedSound params = ExtractionParamsFromGUI();
+    ExtractTask task = extractQueue.at(idx);
+    task.params = params;
+    extractQueue.at(idx) = task;
+}
+
+void MainWindow::QueueImportVFB()
+{
+    if(this->extractQueue.size() >= 5) return; // queue full
+
+    int nSlots = 5 - this->extractQueue.size();
+
+    static QString prevDir = "";
+    QString srcDir;
+    QString expDir;
+
+    if(this->prevExportDir.isEmpty())
+    {
+        QSettings settings;
+        settings.beginGroup("default-folder");
+        expDir = settings.value("export").toString();
+        if(expDir.isEmpty())
+        {
+            expDir = QStandardPaths::writableLocation(
+                QStandardPaths::DocumentsLocation);
+        }
+        settings.endGroup();
+    }
+    else
+    {
+        expDir = this->prevExportDir;
+    }
+
+    if(prevDir.isEmpty())
+    {
+        QSettings settings;
+        settings.beginGroup("default-folder");
+        srcDir = settings.value("source").toString();
+        if(srcDir.isEmpty())
+        {
+            QStringList l;
+            l = QStandardPaths::standardLocations(
+                QStandardPaths::DocumentsLocation);
+            if(l.size()) srcDir = l.at(0);
+            else srcDir = "/";
+        }
+        settings.endGroup();
+    }
+    else
+    {
+        srcDir = prevDir;
+    }
+
+    QString xmlFilename = QFileDialog::getOpenFileName(
+        this,
+        tr("Virtual Film Bench Exported Clips"),
+        srcDir,
+        "VFB Export (*.xml)");
+
+    if(xmlFilename.isEmpty()) return;
+
+    prevDir = QFileInfo(xmlFilename).absolutePath();
+
+    QFile xmlFile(xmlFilename);
+    if(!xmlFile.open(QFile::ReadOnly | QFile::Text))
+    {
+        QMessageBox msgError;
+        msgError.setText(
+            QString("Cannot open file %1").arg(xmlFilename));
+        msgError.setIcon(QMessageBox::Critical);
+        msgError.setWindowTitle("Error opening XML file");
+        msgError.exec();
+        return;
+    }
+
+    QDomDocument xmlBOM;
+    // Set data into the QDomDocument for processing
+    QDomDocument::ParseResult parse = xmlBOM.setContent(&xmlFile);
+    xmlFile.close();
+
+    // nb: the 6.5 docs say casting to bool returns true if there is an
+    // error and false otherwise, but the opposite is the case.
+    if(!bool(parse))
+    {
+        QMessageBox msgError;
+        msgError.setText(
+            QString("Error reading XML file, line %1, column %2<br/>%3")
+                .arg(parse.errorLine)
+                .arg(parse.errorColumn)
+                .arg(parse.errorMessage.toHtmlEscaped()));
+        msgError.setIcon(QMessageBox::Critical);
+        msgError.setWindowTitle("Error reading XML file");
+        msgError.exec();
+        return;
+    }
+
+    QDomElement root = xmlBOM.documentElement();
+    QDomElement element;
+    QDomElement attr;
+
+    uint32_t start(0);
+    uint32_t end(0);
+    bool isClip;
+    QString tagName;
+    QString clipType;
+
+    struct ClipSetting {
+        uint32_t start;
+        uint32_t end;
+        QString label;
+    } clip;
+
+    QList<ClipSetting> clipList;
+
+    for(element = root.firstChildElement();
+         !element.isNull();
+         element = element.nextSiblingElement())
+    {
+        if(element.tagName() != "event") continue;
+
+        start = end = 0;
+        isClip = false;
+        clipType = QString();
+
+        // loop over the attributes of this event to find clip params
+        for(attr = element.firstChildElement();
+             !attr.isNull();
+             attr = attr.nextSiblingElement())
+        {
+            tagName = attr.tagName();
+
+            if(tagName=="location_absolute_in")
+            {
+                start = attr.firstChild().toText().data().toULong();
+            }
+            else if(tagName=="location_absolute_out")
+            {
+                end = attr.firstChild().toText().data().toULong();
+            }
+            else if(tagName.compare("clip", Qt::CaseInsensitive) == 0)
+            {
+                isClip = true;
+                clipType = attr.firstChild().toText().data();
+            }
+            else if (tagName=="event_type")
+            {
+                if(attr.firstChild().toText().data().
+                    compare("clip", Qt::CaseInsensitive) == 0)
+                {
+                    isClip = true;
+                }
+            }
+            else if(tagName.compare("clipType", Qt::CaseInsensitive) == 0)
+            {
+                clipType = attr.firstChild().toText().data();
+            }
+        }
+
+        if(isClip)
+        {
+            clip.start = start;
+            clip.end = end;
+            clip.label = clipType;
+            clipList.append(ClipSetting(clip));
+        }
+    }
+
+    if(clipList.isEmpty())
+    {
+        QMessageBox msgError;
+        msgError.setText(QString("No 'Clip' event types found"));
+        msgError.setIcon(QMessageBox::Information);
+        msgError.setWindowTitle("No clips found");
+        msgError.exec();
+        return;
+    }
+
+    ExtractedSound params = ExtractionParamsFromGUI();
+
+    if(clipList.size() > 1 && nSlots > 1)
+    {
+        QMessageBox msg(this);
+
+        if(clipList.size() <= nSlots)
+        {
+            msg.setText(QString("%1 clips found.\n"
+                        "Do you wish to name the output files "
+                        "individually or use a base name plus a count?").
+                    arg(clipList.size()));
+        }
+        else
+        {
+            msg.setText(QString("%1 clips found, first %2 will be used.\n"
+                        "Do you wish to name the output files "
+                        "individually or use a base name plus a count?").
+                    arg(clipList.size()).arg(nSlots));
+            clipList.resize(nSlots);
+        }
+
+        msg.setWindowTitle("Multiple clips found");
+        QPushButton *indButton = new QPushButton("Individually");
+        msg.addButton(indButton, QMessageBox::AcceptRole);
+        QPushButton *baseButton = new QPushButton("Base with Count");
+        msg.addButton(baseButton, QMessageBox::AcceptRole);
+        msg.addButton(QMessageBox::Cancel);
+
+        msg.exec();
+
+        if(msg.clickedButton() == baseButton)
+        {
+            QString filename = QFileDialog::getSaveFileName(
+                this,
+                tr("Export audio file basename"),
+                expDir,"*.wav");
+            if(filename.isEmpty()) return;
+
+            QString base = QFileInfo(filename).completeBaseName();
+            QString path = QFileInfo(filename).path();
+            QString ext = QFileInfo(filename).suffix();
+
+            filename = path + "/" + base + "-%1." + ext;
+
+            for(int i=0; i<clipList.size(); i++)
+            {
+                clip = clipList.at(i);
+
+                ExtractTask task;
+                task.output = filename.arg(i);
+                task.source = QString(this->scan.inFile.GetFileName().c_str());
+                task.srcFormat = this->scan.inFile.GetFormat();
+                task.params = params;
+                task.params.frameIn = clip.start;
+                task.params.frameOut = clip.end;
+                this->extractQueue.push_back(task);
+            }
+            UpdateQueueWidgets();
+            return;
+        }
+        else if(msg.clickedButton() != indButton) return;
+
+        // individually: fall through to loop below
+    }
+
+    // At this point, either:
+    // nSlots is 1,
+    // clipSize is 1,
+    // or user selected to name each output file individually.
+
+    if(nSlots == 1 && clipList.size() > 1)
+    {
+        QMessageBox::StandardButton btn =
+            QMessageBox::information(this, "Multiple Clips Found",
+                QString("%1 clips found, first 1 will be used.\n").
+                    arg(clipList.size()),
+            QMessageBox::Cancel | QMessageBox::Ok,
+            QMessageBox::Ok);
+        if(btn != QMessageBox::Ok) return;
+
+        clipList.resize(1);
+    }
+
+    QList<ExtractTask> taskList;
+    for(int i=0; i<clipList.size(); i++)
+    {
+        clip = clipList.at(i);
+        QString filename = QFileDialog::getSaveFileName(
+            this,
+            tr("Clip (%1 to %2): Export audio to").
+                arg(clip.start).arg(clip.end),
+            expDir,"*.wav");
+        if(filename.isEmpty()) return;
+
+        this->prevExportDir = QFileInfo(filename).absolutePath();
+
+        ExtractTask task;
+        task.output = filename;
+        task.source = QString(this->scan.inFile.GetFileName().c_str());
+        task.srcFormat = this->scan.inFile.GetFormat();
+        task.params = ExtractionParamsFromGUI();
+        task.params.frameIn = clip.start;
+        task.params.frameOut = clip.end;
+
+        taskList.append(task);
+    }
+
+    for(auto &task : taskList) this->extractQueue.push_back(task);
+
+    UpdateQueueWidgets();
 }
 
 void MainWindow::on_queueExtractButton_clicked()

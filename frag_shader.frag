@@ -10,6 +10,7 @@ uniform sampler2D overlap_audio_tex;
 uniform sampler2D overlapcompute_audio_tex;
 uniform sampler2D cal_audio_tex;
 uniform float overlapshow;
+uniform float rot_angle;
 uniform float render_mode;
 uniform float show_mode;
 uniform float overlap_target;

@@ -98,7 +98,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -1348,7 +1348,7 @@
          </widget>
         </item>
         <item row="5" column="0">
-         <widget class="QLabel" name="label_10">
+         <widget class="QLabel" name="xmlSidecarLabel">
           <property name="text">
            <string>XML Sidecar File</string>
           </property>
@@ -1470,38 +1470,121 @@
       <attribute name="title">
        <string>Queue</string>
       </attribute>
-      <widget class="QWidget" name="formLayoutWidget">
+      <widget class="QLabel" name="label_17">
        <property name="geometry">
         <rect>
-         <x>60</x>
-         <y>50</y>
-         <width>521</width>
-         <height>158</height>
+         <x>40</x>
+         <y>20</y>
+         <width>211</width>
+         <height>16</height>
         </rect>
        </property>
-       <layout class="QFormLayout" name="formLayout">
-        <item row="0" column="0">
-         <widget class="QPushButton" name="queueDelete1Button">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
+       <property name="font">
+        <font>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Extraction Queue</string>
+       </property>
+      </widget>
+      <widget class="QWidget" name="gridLayoutWidget_5">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>50</y>
+         <width>511</width>
+         <height>146</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="3" column="1">
+         <widget class="QPushButton" name="queueLoad4Button">
           <property name="text">
-           <string>Delete</string>
+           <string>Load Settings</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="queue1Label">
+        <item row="3" column="3">
+         <widget class="QLabel" name="queue4Label">
           <property name="enabled">
            <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="text">
            <string>Not Set</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="queueDelete2Button">
+        <item row="4" column="1">
+         <widget class="QPushButton" name="queueLoad5Button">
+          <property name="text">
+           <string>Load Settings</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="3">
+         <widget class="QLabel" name="queue5Label">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Not Set</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QLabel" name="queue2Label">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Not Set</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLabel" name="queue1Label">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Not Set</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="queueLoad1Button">
+          <property name="text">
+           <string>Load Settings</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="queueDelete5Button">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -1520,6 +1603,30 @@
           </property>
          </widget>
         </item>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="queueDelete1Button">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Delete</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="queueLoad3Button">
+          <property name="text">
+           <string>Load Settings</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="queueLoad2Button">
+          <property name="text">
+           <string>Load Settings</string>
+          </property>
+         </widget>
+        </item>
         <item row="3" column="0">
          <widget class="QPushButton" name="queueDelete4Button">
           <property name="enabled">
@@ -1530,8 +1637,24 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
-         <widget class="QPushButton" name="queueDelete5Button">
+        <item row="2" column="3">
+         <widget class="QLabel" name="queue3Label">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Not Set</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="queueDelete2Button">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -1540,82 +1663,84 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QLabel" name="queue2Label">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
+        <item row="0" column="2">
+         <widget class="QPushButton" name="queueUpdate1Button">
           <property name="text">
-           <string>Not Set</string>
+           <string>Update Settings</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="queue3Label">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="queueUpdate2Button">
           <property name="text">
-           <string>Not Set</string>
+           <string>Update Settings</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QLabel" name="queue4Label">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
+        <item row="2" column="2">
+         <widget class="QPushButton" name="queueUpdate3Button">
           <property name="text">
-           <string>Not Set</string>
+           <string>Update Settings</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QLabel" name="queue5Label">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
+        <item row="3" column="2">
+         <widget class="QPushButton" name="queueUpdate4Button">
           <property name="text">
-           <string>Not Set</string>
+           <string>Update Settings</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QPushButton" name="queueUpdate5Button">
+          <property name="text">
+           <string>Update Settings</string>
           </property>
          </widget>
         </item>
        </layout>
       </widget>
-      <widget class="QLabel" name="label_17">
+      <widget class="QWidget" name="horizontalLayoutWidget_4">
        <property name="geometry">
         <rect>
-         <x>40</x>
-         <y>20</y>
-         <width>211</width>
-         <height>16</height>
+         <x>70</x>
+         <y>220</y>
+         <width>511</width>
+         <height>41</height>
         </rect>
        </property>
-       <property name="font">
-        <font>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Extraction Queue</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="queueExtractButton">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>470</x>
-         <y>230</y>
-         <width>113</width>
-         <height>32</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Extract All</string>
-       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QPushButton" name="queueImportVFBClipsButton">
+          <property name="text">
+           <string>Import from VFB</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_9">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="queueExtractButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Extract All</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </widget>
@@ -1800,6 +1925,23 @@
          </layout>
         </item>
        </layout>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="rotateCheckbox">
+        <property name="text">
+         <string>Rotate</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="degreeSpinBox">
+        <property name="minimum">
+         <double>-10.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10.000000000000000</double>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -2006,7 +2148,7 @@
      <x>0</x>
      <y>0</y>
      <width>684</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -2183,11 +2325,6 @@
   <tabstop>extractDefaultsButton</tabstop>
   <tabstop>enqueueButton</tabstop>
   <tabstop>extractGLButton</tabstop>
-  <tabstop>queueDelete1Button</tabstop>
-  <tabstop>queueDelete2Button</tabstop>
-  <tabstop>queueDelete3Button</tabstop>
-  <tabstop>queueDelete4Button</tabstop>
-  <tabstop>queueDelete5Button</tabstop>
   <tabstop>queueExtractButton</tabstop>
   <tabstop>waveformZoomCheckBox</tabstop>
   <tabstop>showOverlapCheckBox</tabstop>

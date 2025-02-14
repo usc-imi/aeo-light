@@ -127,7 +127,10 @@ public:
 	float* audio_compare_buffer;
 	GLfloat bounds[4]; // boundry of track area 4 elements x1,x2,y1,y2
 	GLfloat overlap[4]; // used to compute overlap and hold translation numbers:   y1_start, y_size,  translate_Y,window,Y;
-	float * height_avg;
+
+    GLfloat rot_angle; // rotation angle
+
+    float * height_avg;
 	float h_avg;
 	float * match_avf;
 	GLfloat pixbounds[2];
@@ -181,6 +184,7 @@ private:
 	GLuint dminmax_loc;
 	GLuint m_colorcontrol_loc;//test uniform varaiable
 	GLuint m_bounds_loc; //location of bounds uniform
+    GLuint m_rot_angle; // bind for rotation angle
 	GLuint m_calcontrol_loc;
 	GLuint m_overlapshow_loc;
 	GLuint frame_texture; //image frame texture used as input

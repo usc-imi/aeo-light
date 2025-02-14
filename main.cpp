@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 	for(int i=0; i<argc; i++) std::cerr << i << ": " << argv[i] << "\n";
 	if(argc > 1) w.SetStartingProject(argv[1]);
 
+    w.resize(700,800);
 	w.show();
 	return a.exec();
 

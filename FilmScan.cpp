@@ -51,7 +51,7 @@
 #include <QString>
 #include <QMessageBox>
 
-#ifdef _WIN32
+#ifdef Q_OS_WIN32
 // Depending on the way you've built libtiff on Windows, you may have
 // to adjust the way tiffio.h declares the libtiff functions.
 // If you're getting errors about symbols starting with __imp_TIFF, like
@@ -71,7 +71,7 @@
 
 #include <tiffio.h>
 
-#if (defined __WIN32__) || (defined _WIN32)
+#ifdef Q_OS_WIN32
 # ifdef BUILD_LIBTIFF_DLL
 #  define LIBTIFF_DLL_IMPEXP     __DLL_EXPORT__
 # elif defined(LIBTIFF_STATIC)
@@ -83,7 +83,7 @@
 # else /* assume USE_LIBTIFF_DLL */
 #  define LIBTIFF_DLL_IMPEXP     __DLL_IMPORT__
 # endif
-#else /* __WIN32__ */
+#else /* WIN32 */
 # define LIBTIFF_DLL_IMPEXP
 #endif
 
@@ -96,7 +96,7 @@
 
 #include "FilmScan.h"
 
-#ifdef _WIN32
+#ifdef Q_OS_WIN32
 #define isslash(c) (((c)=='/')||((c)=='\\'))
 #else
 #define isslash(c) ((c)=='/')
@@ -591,7 +591,7 @@ bool FilmScan::SourceIdentifyImageSet(const std::string filename)
 		this->path[pl]='\0';
 
 		// adjust slashes on windows to avoid complications later
-		#ifdef _WIN32
+        #ifdef Q_OS_WIN32
 		for(char *cpw=this->path; *cpw; cpw++)
 			if(*cpw == '\\') *cpw = '/';
 		#endif
@@ -777,6 +777,7 @@ bool FilmScan::SourceLibAV(const std::string filename)
 		return false; // Couldn't find any video stream
 	}
 
+    #ifdef ASK_TO_BUFFER_VIDEO
 	int ret = QMessageBox::question(NULL,
 		"Buffer Input?",
 		"Do you want to buffer the incoming video?",
@@ -823,7 +824,8 @@ bool FilmScan::SourceLibAV(const std::string filename)
 			vid = NULL;
 			return false; // Couldn't find any video stream
 		}
-	}
+    }
+    #endif
 
 	// ask the stream how many frames it has
 	if((this->numFrames=vid->format->streams[vid->streamIdx]->nb_frames) == 0)

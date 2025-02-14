@@ -50,12 +50,72 @@ preferencesdialog::preferencesdialog(QWidget *parent) :
 	settings->beginGroup("default-folder");
 	ui->sourceText->setText(settings->value("source", sysRead).toString());
 	ui->projectText->setText(settings->value("project", sysWrite).toString());
-	ui->exportText->setText(settings->value("export", sysWrite).toString());
-	settings->endGroup();
+    ui->exportText->setText(settings->value("export", sysWrite).toString());
+    ui->importText->setText(settings->value("import", sysRead).toString());
+    settings->endGroup();
 
 	ui->sourceText->setPlaceholderText(sysRead);
 	ui->projectText->setPlaceholderText(sysWrite);
-	ui->exportText->setPlaceholderText(sysWrite);
+    ui->exportText->setPlaceholderText(sysWrite);
+    ui->importText->setPlaceholderText(sysRead);
+
+    connect(
+        ui->browseForSourceButton, &QPushButton::clicked,
+        this, [this](){
+            BrowseForFolder(
+                ui->sourceText,
+                "Default Source Scan Folder",
+                sysRead);
+            }
+        );
+    connect(
+        ui->browseForProjectButton, &QPushButton::clicked,
+        this, [this](){
+            BrowseForFolder(
+                ui->projectText,
+                "Default AEO Project File Folder",
+                sysWrite);
+        }
+        );
+    connect(
+        ui->browseForExportButton, &QPushButton::clicked,
+        this, [this](){
+            BrowseForFolder(
+                ui->exportText,
+                "Default Export Folder",
+                sysWrite);
+        }
+        );
+    connect(
+        ui->browseForImportButton, &QPushButton::clicked,
+        this, [this](){
+            BrowseForFolder(
+                ui->importText,
+                "Default Import Folder",
+                sysRead);
+        }
+        );
+
+    connect(
+        ui->sourceText, &QLineEdit::editingFinished,
+        this, [this](){ ValidateFolder(sysRead); } );
+    connect(
+        ui->projectText, &QLineEdit::editingFinished,
+        this, [this](){ ValidateFolder(sysWrite); } );
+    connect(
+        ui->exportText, &QLineEdit::editingFinished,
+        this, [this](){ ValidateFolder(sysWrite); } );
+    connect(
+        ui->importText, &QLineEdit::editingFinished,
+        this, [this](){ ValidateFolder(sysRead); } );
+
+
+    connect(
+        ui->discardButton, &QPushButton::clicked,
+        this, &preferencesdialog::reject);
+    connect(
+        ui->saveButton, &QPushButton::clicked,
+        this, &preferencesdialog::Save);
 }
 
 preferencesdialog::~preferencesdialog()
@@ -66,47 +126,29 @@ preferencesdialog::~preferencesdialog()
 	delete ui;
 }
 
-void preferencesdialog::on_browseForSourceButton_clicked()
+void preferencesdialog::BrowseForFolder(
+    QLineEdit *lineEdit, QString title, QString dflt)
 {
-	QString curdir = ui->sourceText->text();
-	if(curdir.isEmpty()) curdir = sysRead;
+    QString curdir = lineEdit->text();
+    if(curdir.isEmpty()) curdir = dflt;
 
-	QString dir = QFileDialog::getExistingDirectory(this,
-			"Default Source Scan Folder", curdir);
+    QString dir = QFileDialog::getExistingDirectory(this, title, curdir);
+    if(dir.isEmpty()) return;
 
-	if(dir.isEmpty()) return;
-
-	ui->sourceText->setText(dir);
+    lineEdit->setText(dir);
 }
 
-void preferencesdialog::on_browseForProjectButton_clicked()
+void preferencesdialog::ValidateFolder(QString dflt)
 {
-	QString curdir = ui->projectText->text();
-	if(curdir.isEmpty()) curdir = sysWrite;
+    QLineEdit *w = qobject_cast<QLineEdit *>(sender());
+    if(!w) return;
 
-	QString dir = QFileDialog::getExistingDirectory(this,
-			"Default AEO Project File Folder", curdir);
+    if(w->text().isEmpty())
+    {
+        w->setText(dflt);
+        return;
+    }
 
-	if(dir.isEmpty()) return;
-
-	ui->projectText->setText(dir);
-}
-
-void preferencesdialog::on_browseForExportButton_clicked()
-{
-	QString curdir = ui->exportText->text();
-	if(curdir.isEmpty()) curdir = sysWrite;
-
-	QString dir = QFileDialog::getExistingDirectory(this,
-			"Default Export Folder", curdir);
-
-	if(dir.isEmpty()) return;
-
-	ui->exportText->setText(dir);
-}
-
-void ValidateDirectory(QLineEdit *w)
-{
 	// turn off signals while we handle the message dialogs. This is a
 	// workaround for the known QT bug wherein editingFinished is called
 	// twice when a messagebox is shown:
@@ -150,43 +192,15 @@ void ValidateDirectory(QLineEdit *w)
 	w->blockSignals(false);
 }
 
-void preferencesdialog::on_sourceText_editingFinished()
-{
-	if(ui->sourceText->text().isEmpty())
-		ui->sourceText->setText(sysRead);
-	else
-		ValidateDirectory(ui->sourceText);
-}
 
-void preferencesdialog::on_projectText_editingFinished()
-{
-	if(ui->projectText->text().isEmpty())
-		ui->projectText->setText(sysWrite);
-	else
-		ValidateDirectory(ui->projectText);
-}
-
-void preferencesdialog::on_exportText_editingFinished()
-{
-	if(ui->exportText->text().isEmpty())
-		ui->exportText->setText(sysWrite);
-	else
-		ValidateDirectory(ui->exportText);
-}
-
-void preferencesdialog::on_discardButton_clicked()
-{
-	reject();
-	//done(Rejected);
-}
-
-void preferencesdialog::on_saveButton_clicked()
+void preferencesdialog::Save()
 {
 	settings->beginGroup("default-folder");
 	settings->setValue("source",ui->sourceText->text());
 	settings->setValue("project",ui->projectText->text());
-	settings->setValue("export",ui->exportText->text());
-	settings->endGroup();
+    settings->setValue("export",ui->exportText->text());
+    settings->setValue("import",ui->importText->text());
+    settings->endGroup();
 
 	settings->beginGroup("audio-metadata");
 	settings->setValue("originator", ui->originatorText->text());

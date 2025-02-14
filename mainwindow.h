@@ -262,6 +262,10 @@ private slots:
 
 	void on_queueDelete5Button_clicked();
 
+    void QueueLoadSettings(size_t idx);
+    void QueueUpdateSettings(size_t idx);
+    void QueueImportVFB();
+
 	void on_loadSettingsButton_clicked();
 
 	void on_queueExtractButton_clicked();

@@ -37,7 +37,7 @@
 # dspfilters
 # openexr
 
-QT       += core gui multimedia
+QT       += core gui multimedia xml
 
 win32: QT += opengl
 
@@ -48,7 +48,7 @@ TEMPLATE = app
 
 # The version of AEO-Light
 APP_NAME = AEO-Light
-VERSION = 2.3.3
+VERSION = 2.4
 
 # nb: when updating the version number, be sure to update LICENSE.txt too
 
