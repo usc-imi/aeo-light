@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // This file is part of AEO-Light
 //
-// Copyright (c) 2016 University of South Carolina
+// Copyright (c) 2016-2025 University of South Carolina
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the
@@ -28,7 +28,7 @@
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QMatrix4x4>
-#include <QtGui/QOpenGLShaderProgram>
+#include <QOpenGLShaderProgram>
 #include <QtGui/QScreen>
 #include <QtCore/qmath.h>
 //#include <QtOpenGL>

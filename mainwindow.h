@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // This file is part of AEO-Light
 //
-// Copyright (c) 2016 University of South Carolina
+// Copyright (c) 2016-2025 University of South Carolina
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the
@@ -24,7 +24,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <QMainWindow>
-#include <QSound>
+#include <QSoundEffect>
 #include <QDate>
 #include <QProgressDialog>
 #include <vector>
@@ -76,7 +76,7 @@ public:
 	bool makeNegative;
 	bool makeGray;
 
-	QSound *sound;
+    QSoundEffect *sound;
 	int err;
 
 	ExtractedSound();
@@ -153,7 +153,6 @@ private slots:
 	bool WriteAudioToFile(const char *fn, const char *videoFn,
 			long firstFrame, long numFrames);
 	void DeleteTempSoundFile(void);
-	void on_changeButton_clicked();
 	void on_sourceButton_clicked();
 	bool saveproject(QString);
 	bool saveproject(QTextStream &stream);
@@ -221,7 +220,6 @@ private slots:
 	void on_FramePitchendSlider_sliderMoved(int position);
 	void on_leftPixSlider_valueChanged(int value);
 	void on_rightPixSlider_valueChanged(int value);
-	void on_smoothingMethodComboBox_2_currentIndexChanged(int index);
 	void on_leftPixSlider_sliderMoved(int position);
 	void on_rightPixSlider_sliderMoved(int position);
 	void on_leftPixSpinBox_valueChanged(int arg1);
@@ -233,8 +231,7 @@ private slots:
 	void on_actionWaveform_Zoom_triggered();
 	void on_actionShow_Overlap_triggered();
 	void on_frameInSpinBox_valueChanged(int arg1);
-	void on_cancelButton_clicked();
-	void on_waveformZoomCheckBox_clicked(bool checked);
+    void on_waveformZoomCheckBox_clicked(bool checked);
 	void on_showOverlapCheckBox_clicked(bool checked);
 	void on_showSoundtrackOnlyCheckBox_clicked(bool checked);
 	void on_actionOpen_Source_triggered();

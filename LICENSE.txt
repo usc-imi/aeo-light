@@ -2,7 +2,7 @@
 Copyright and Open Source Software License
 ----------------------------------------------------------------------
 
-Copyright (c) 2015-2019 South Carolina Research Foundation
+Copyright (c) 2015-2025 South Carolina Research Foundation
 All Rights Reserved
 
 AEO-Light, Ver. 2.3.3

@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // This file is part of AEO-Light
 //
-// Copyright (c) 2016 University of South Carolina
+// Copyright (c) 2016-2025 University of South Carolina
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the
@@ -38,13 +38,14 @@
 #include <QMessageBox>
 #include <QDesktopServices>
 #include <QInputDialog>
-#include <QSound>
+#include <QSoundEffect>
 #include <QFile>
 #include <QMouseEvent>
 #include <QDateTime>
 #include <QTemporaryFile>
 #include <QScrollArea>
 #include <QProgressDialog>
+#include <QStandardPaths>
 
 #include <cstdio>
 #include <exception>
@@ -802,13 +803,6 @@ int MainWindow::MaxFrequency() const
 	return int(nPitchLines * fps / 2);
 }
 
-void MainWindow::on_changeButton_clicked()
-{
-	frame_window->close();
-	delete frame_window;
-}
-
-
 void MainWindow::on_sourceButton_clicked()
 {
 	// Ask for input source
@@ -1106,7 +1100,7 @@ bool MainWindow::LoadProjectSource(QString fn)
 
 	while(!in.atEnd() && !foundSource) {
 		QString line = in.readLine();
-		QStringList fields = line.split(QRegExp("\\s*=\\s*"));
+        QStringList fields = line.split(QRegularExpression("\\s*=\\s*"));
 
 		if((fields[0]).contains("Source Scan"))
 		{
@@ -1144,7 +1138,7 @@ bool MainWindow::LoadProjectSettings(QString fn)
 
 	while(!in.atEnd()) {
 		QString line = in.readLine();
-		QStringList fields = line.split(QRegExp("\\s*=\\s*"));
+        QStringList fields = line.split(QRegularExpression("\\s*=\\s*"));
 
 		if ((fields[0]).contains("Frame Rate"))
 		{
@@ -1683,8 +1677,8 @@ void MainWindow::PlaySample(int index)
 		GPU_Params_Update(true);
 	}
 
-	QSound *sound = sample.sound;
-	if(sound->isFinished())
+    QSoundEffect *sound = sample.sound;
+    if(!sound->isPlaying())
 		sound->play();
 
 	return;
@@ -1721,7 +1715,8 @@ void MainWindow::on_playSampleButton_clicked()
 
 	if(sample.err == 0)
 	{
-		sample.sound = new QSound(qtmp.fileName(), NULL);
+        sample.sound = new QSoundEffect();
+        sample.sound->setSource(QUrl::fromLocalFile(qtmp.fileName()));
 		sample.sound->play();
 
 		SaveSampleDialog *save = new SaveSampleDialog(this);
@@ -3251,8 +3246,8 @@ bool MainWindow::WriteAudioToFile(const char *fn, const char *videoFn,
 
 		unsigned int sec;
 		unsigned int frames;
-		QStringList TCL = this->scan.inFile.TimeCode.split(
-					QRegExp("[:]"),QString::SkipEmptyParts);
+        QStringList TCL = this->scan.inFile.TimeCode.split(
+            QRegularExpression("[:]"),Qt::SkipEmptyParts);
 		sec =(((TCL[0].toInt() * 3600 )+ (TCL[1].toInt()* 60)+TCL[2].toInt()));
 		frames = TCL[3].toInt() +firstFrame +( sec * fps_timbase);
 		frames += ui->advance_CB->currentIndex();
@@ -3392,7 +3387,8 @@ QString MainWindow::Compute_Timecode_String(int position)
 	if(ui->filmrate_PD->currentIndex()>1)
 		fps_timebase=25;
 
-	QStringList TCL =  this->scan.inFile.TimeCode.split(QRegExp("[:]"),QString::SkipEmptyParts);
+    QStringList TCL =  this->scan.inFile.TimeCode.split(
+        QRegularExpression("[:]"),Qt::SkipEmptyParts);
 	sec =(((TCL[0].toInt() * 3600 )+ (TCL[1].toInt()* 60)+TCL[2].toInt()));
 	frames = TCL[3].toInt() +position;
 	sec+=frames/fps_timebase;
@@ -3424,8 +3420,8 @@ uint64_t MainWindow::ComputeTimeReference(int position, int samplingRate)
 
 	uint64_t reference;
 
-	QStringList TCL =  this->scan.inFile.TimeCode.split(
-			QRegExp("[:]"),QString::SkipEmptyParts);
+    QStringList TCL =  this->scan.inFile.TimeCode.split(
+        QRegularExpression("[:]"),Qt::SkipEmptyParts);
 	sec =(((TCL[0].toInt() * 3600 )+ (TCL[1].toInt()* 60)+TCL[2].toInt()));
 	frames = TCL[3].toInt() +position;
 
@@ -3479,11 +3475,6 @@ void MainWindow::on_leftPixSlider_valueChanged(int value)
 }
 
 void MainWindow::on_rightPixSlider_valueChanged(int value)
-{
-	GPU_Params_Update(1);
-}
-
-void MainWindow::on_smoothingMethodComboBox_2_currentIndexChanged(int index)
 {
 	GPU_Params_Update(1);
 }
@@ -3655,8 +3646,9 @@ void MainWindow::DeleteTempSoundFile(void)
 			sample = samplesPlayed[i];
 			if(sample.sound != NULL)
 			{
-				sample.sound->stop();
-				QFile::remove(sample.sound->fileName());
+                sample.sound->stop();
+                if(sample.sound->source().isLocalFile())
+                    QFile::remove(sample.sound->source().path());
 			}
 			samplesPlayed[i] = emptySound;
 		}
@@ -3752,11 +3744,6 @@ void MainWindow::on_actionShow_Overlap_triggered()
 void MainWindow::on_frameInSpinBox_valueChanged(int arg1)
 {
       ui->frameOutTimeCodeLabel->setText(Compute_Timecode_String(arg1 - this->scan.inFile.FirstFrame()));
-}
-
-void MainWindow::on_cancelButton_clicked()
-{
-	this->requestCancel = true;
 }
 
 void MainWindow::on_waveformZoomCheckBox_clicked(bool checked)

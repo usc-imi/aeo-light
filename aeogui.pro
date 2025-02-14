@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------------
 # This file is part of AEO-Light
 #
-# Copyright (c) 2016 University of South Carolina
+# Copyright (c) 2016-2025 University of South Carolina
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -63,7 +63,8 @@ ICON = $$PWD/aeolight.icns
 # platform-specific include paths
 win32 {
 	INCLUDEPATH += /include
-	DEFINES += __STDC_CONSTANT_MACROS
+        INCLUDEPATH += $$PWD/include
+        DEFINES += __STDC_CONSTANT_MACROS
 } else:unix {
 	INCLUDEPATH += /usr/local/include/ /opt/local/include/
 }
@@ -82,6 +83,7 @@ macx {
 	QMAKE_LINK += -headerpad_max_install_names
 } else:win32 {
 	QMAKE_LIBDIR += "C:\lib"
+        QMAKE_LIBDIR += $$PWD/lib
 	LIBS += -lopengl32
 } else:unix {
 	LIBS += -lGL
@@ -143,17 +145,17 @@ LIBS += -ldpx
 win32: LIBS += -llibtiff
 else: LIBS += -ltiff
 
-win32-g++:CONFIG(release, debug|release) {
-	PRE_TARGETDEPS += $$PWD/./release/libdpx.a
-} else:win32-g++:CONFIG(debug, debug|release) {
-	PRE_TARGETDEPS += $$PWD/./debug/libdpx.a
-} else:win32:CONFIG(release, debug|release) {
-	PRE_TARGETDEPS += $$PWD/./release/dpx.lib
-} else:win32:CONFIG(debug, debug|release) {
-	PRE_TARGETDEPS += $$PWD/./debug/dpx.lib
-} else:unix {
-	PRE_TARGETDEPS += $$PWD/./libdpx.a
-}
+#win32-g++:CONFIG(release, debug|release) {
+#	PRE_TARGETDEPS += $$PWD/./release/libdpx.a
+#} else:win32-g++:CONFIG(debug, debug|release) {
+#	PRE_TARGETDEPS += $$PWD/./debug/zlibdpx.a
+#} else:win32:CONFIG(release, debug|release) {
+#	PRE_TARGETDEPS += $$PWD/./release/dpx.lib
+#} else:win32:CONFIG(debug, debug|release) {
+#	PRE_TARGETDEPS += $$PWD/./debug/dpx.lib
+#} else:unix {
+#	PRE_TARGETDEPS += $$PWD/./libdpx.a
+#}
 
 unix: CONFIG += link_pkgconfig
 

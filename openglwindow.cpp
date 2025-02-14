@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // This file is part of AEO-Light
 //
-// Copyright (c) 2016 University of South Carolina
+// Copyright (c) 2016-2025 University of South Carolina
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the
@@ -27,7 +27,7 @@
 #include <QDebug>
 
 #include <QtGui/QOpenGLContext>
-#include <QtGui/QOpenGLPaintDevice>
+#include <QOpenGLPaintDevice>
 #include <QtGui/QPainter>
 
 OpenGLWindow::OpenGLWindow(QWindow *parent)
