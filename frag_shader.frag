@@ -234,7 +234,23 @@ void main(void)
         int k;
         vec2 grabberm;
         vec2 grabber;
-        texel = texture2D(frame_tex, vTexCoord);
+
+        float angle = 3.1415926*(rot_angle)/180.0;
+                  float s = sin(angle);
+                  float c = cos(angle);
+
+
+
+                  mat2 rotMatrix = mat2(c, s,
+                                        -s,  c);
+
+
+vec2  vTexRotated = vTexCoord-vec2(0.5,0.5);
+vTexRotated = vTexRotated*rotMatrix;
+
+vTexRotated = vTexRotated +vec2(0.5,0.5);
+
+        texel = texture2D(frame_tex, vTexRotated);
         if(cal_controls.y==1.0)
         {
             grabberm =  vec2(4.0,4.0);
@@ -251,12 +267,12 @@ void main(void)
             {
 
 
-                grabber = vTexCoord + (ioffset[k]*grabberm);
+                grabber = vTexRotated + (ioffset[k]*grabberm);
                 grabber.y= max(0.0,min(grabber.y,1.0));
 
 
 
-                tmps = texture2D(frame_tex,grabber);
+                tmps = texture2D(frame_tex,grabber*rotMatrix);
 
                 sharp_texel+=tmps*KERNEL_HSHARPEN [k];
                 blur_texel+=(tmps *KERNEL_HBLUR [k]);

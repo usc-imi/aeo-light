@@ -70,12 +70,13 @@ public:
 	int8_t lift; // [-100,100]
 	int8_t blur; // [-100,100]
 	uint8_t fpsType;
+    double rot_angle;
 	bool useBounds;
 	bool usePixBounds;
 	bool useSCurve;
 	bool makeNegative;
-	bool makeGray;
-
+    bool makeGray;
+    bool applyRotation;
     QSoundEffect *sound;
 	int err;
 
@@ -281,6 +282,10 @@ private slots:
 	void on_actionReport_or_track_an_issue_triggered();
 
 	void on_OverlapPixCheckBox_clicked(bool checked);
+
+    void on_degreeSpinBox_valueChanged(double arg1);
+
+    void on_rotateCheckbox_stateChanged(int arg1);
 
 private:
 	QString startingProjectFilename;

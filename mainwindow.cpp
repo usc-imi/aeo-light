@@ -127,12 +127,14 @@ ExtractedSound::ExtractedSound() :
 	overlap(20),
 	lift(0),
 	blur(0),
-	fpsType(FPS_24),
-	useBounds(true),
-	usePixBounds(false),
-	useSCurve(false),
-	makeNegative(false),
-	makeGray(false),
+    fpsType(FPS_24),
+    rot_angle(0),
+    useBounds(true),
+    usePixBounds(false),
+    useSCurve(false),
+    makeNegative(false),
+    makeGray(false),
+    applyRotation(false),
 	sound(NULL),
 	err(0)
 {
@@ -279,7 +281,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->xmlSidecarLabel->setVisible(false);
 
     ui->filmrate_PD->setCurrentIndex(1); // default to 24fps
-
+    ui->degreeSpinBox->setSingleStep(0.01);
 	// skip license agreement if the user has already agreed to this version
 	QSettings settings;
 	QString ag = settings.value("license","0.1").toString();
@@ -604,6 +606,8 @@ ExtractedSound MainWindow::ExtractionParamsFromGUI()
 	params.makeNegative = ui->negBox->isChecked();
 	params.makeGray = ui->desatBox->isChecked();
 
+    params.rot_angle=ui->degreeSpinBox->value();
+    params.applyRotation=ui->rotateCheckbox->isChecked();
 	return params;
 }
 
@@ -666,6 +670,8 @@ void MainWindow::ExtractionParametersToGUI(const ExtractedSound &params)
 	ui->negBox->setChecked(params.makeNegative);
 	ui->desatBox->setChecked(params.makeGray);
 
+    ui->degreeSpinBox->setValue(params.rot_angle);
+     ui->rotateCheckbox->setChecked(params.applyRotation);
 	GPU_Params_Update(1);
 }
 
@@ -4363,3 +4369,16 @@ void MainWindow::on_OverlapPixCheckBox_clicked(bool checked)
 	ui->leftPixSlider->setEnabled(checked);
 	ui->rightPixSlider->setEnabled(checked);
 }
+
+void MainWindow::on_degreeSpinBox_valueChanged(double arg1)
+{
+
+    GPU_Params_Update(1);
+}
+
+
+void MainWindow::on_rotateCheckbox_stateChanged(int arg1)
+{
+        GPU_Params_Update(1);
+}
+

@@ -98,7 +98,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -110,7 +110,7 @@
          <x>10</x>
          <y>10</y>
          <width>631</width>
-         <height>246</height>
+         <height>259</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="soundtrackSettingGrid" rowstretch="0,0,0,0,0,0,0" columnstretch="0,0,0,0,0">
@@ -634,7 +634,7 @@
          <x>10</x>
          <y>10</y>
          <width>621</width>
-         <height>181</height>
+         <height>193</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout">
@@ -1494,7 +1494,7 @@
          <x>70</x>
          <y>50</y>
          <width>511</width>
-         <height>146</height>
+         <height>168</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
@@ -1935,6 +1935,9 @@
       </item>
       <item>
        <widget class="QDoubleSpinBox" name="degreeSpinBox">
+        <property name="decimals">
+         <number>2</number>
+        </property>
         <property name="minimum">
          <double>-10.000000000000000</double>
         </property>
@@ -2056,8 +2059,8 @@
       <rect>
        <x>10</x>
        <y>50</y>
-       <width>371</width>
-       <height>66</height>
+       <width>376</width>
+       <height>72</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_5">
@@ -2148,7 +2151,7 @@
      <x>0</x>
      <y>0</y>
      <width>684</width>
-     <height>21</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
