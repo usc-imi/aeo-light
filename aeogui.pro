@@ -58,6 +58,7 @@ DEFINES += APP_VERSION_STR=\\\"$$VERSION\\\"
 
 
 ICON = $$PWD/aeolight.icns
+RC_ICONS = $$PWD/aeolight.ico
 
 #------------------------------------------------------------------------------
 # platform-specific include paths
